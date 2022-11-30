@@ -1,0 +1,34 @@
+{{ block title }}Results{{ endblock }}
+{{ block content }}
+
+    {{ if player.id_in_group == 1 }}
+        <p>
+            You chose to trust participant B {{ group.trust }}.
+            Participant B chose effort {{ group.chosen_effort }}.
+        </p>
+        <p>
+            You were initially endowed with {{ C.ENDOWMENT_PRINCIPAL }},
+            chose to trust {{ group.trust }},
+            received {{ group.chosen_effort }}
+            thus you now have:
+            {{ C.ENDOWMENT_PRINCIPAL }}2 * {{ group.chosen_effort }}=<strong>{{ player.payoff }}</strong>
+        </p>
+    {{ else }}
+        <p>
+            Participant A trusted you {{ group.trust }}.
+            You chose to return {{ group.chosen_effort }}.
+        </p>
+        <p>
+            You received {{ group.trust }},
+            chose to return {{ group.chosen_effort }}
+            thus you now have:
+            {{ C.ENDOWMENT_AGENT }})-({{ group.chosen_effort }})=<strong>{{ player.payoff }}</strong>-->
+        </p>
+        .
+    {{ endif }}
+
+    <p>{{ next_button }}</p>
+
+    {{ include C.INSTRUCTIONS_TEMPLATE }}
+
+{{ endblock }}

@@ -1,0 +1,15 @@
+{{ block title }}Your Choice{{ endblock }}
+{{ block content }}
+
+    <p>
+    You are Participant A. Your Now you have {{C.ENDOWMENT_PRINCIPAL}}. Do you want to trust Participant B?
+    </p>
+
+    {{ formfields }}
+    <p>
+    {{ next_button }}
+    </p>
+
+    {{ include C.INSTRUCTIONS_TEMPLATE }}
+
+{{ endblock }}

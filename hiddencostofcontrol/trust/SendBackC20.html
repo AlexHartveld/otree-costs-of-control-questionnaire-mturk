@@ -1,0 +1,22 @@
+{{ block title }}Your Choice{{ endblock }}
+{{ block content }}
+<p>
+    You are Participant B. Your Endowment is {{ C.ENDOWMENT_AGENT }}
+    How much will you send to participant A if he chooses to trust you?
+</p>
+
+{{ formfield 'chosen_effort' }}
+
+<p>
+    You are Participant B. Your Endowment is {{ C.ENDOWMENT_AGENT }}
+    How much will you send to participant A if he chooses to control you?
+</p>
+
+{{ formfield 'chosen_effort20' }}
+
+<p>{{ next_button }}</p>
+
+
+    {{ include C.INSTRUCTIONS_TEMPLATE }}
+
+{{ endblock }}

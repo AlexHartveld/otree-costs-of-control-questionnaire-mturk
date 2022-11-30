@@ -26,7 +26,7 @@ class Subsession(BaseSubsession):
 def creating_session(subsession):
     control = [5, 10, 20]
     for player in subsession.get_players():
-        player.control = control[player.group.id % 3 - 1]
+        player.control = control[player.group.id % 3]
 
 class Group(BaseGroup):
     trust = models.StringField(
@@ -34,9 +34,9 @@ class Group(BaseGroup):
         widget=widgets.RadioSelectHorizontal
     )
     chosen_effort = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(0), max=cu(120))
-    chosen_effort5 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(5), max=cu(120))
-    chosen_effort10 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(10), max=cu(120))
-    chosen_effort20 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(20), max=cu(120))
+    chosen_effort_min5 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(5), max=cu(120))
+    chosen_effort_min10 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(10), max=cu(120))
+    chosen_effort_min20 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(20), max=cu(120))
 
 class Player(BasePlayer):
 #    pass
@@ -47,8 +47,23 @@ class Player(BasePlayer):
 def set_payoffs(group: Group):
     p1 = group.get_player_by_id(1)
     p2 = group.get_player_by_id(2)
-    p1.payoff = 2 * group.chosen_effort
-    p2.payoff = C.ENDOWMENT_AGENT - group.chosen_effort
+    # check which chosen_effort has a value
+    chosen_effort_control = None
+    if group.field_maybe_none('chosen_effort_min5') is not None: 
+        chosen_effort_control = group.chosen_effort_min5
+    elif group.field_maybe_none('chosen_effort_min10') is not None: 
+        chosen_effort_control = group.chosen_effort_min10
+    elif group.field_maybe_none('chosen_effort_min20') is not None: 
+        chosen_effort_control = group.chosen_effort_min20
+    
+    # check if p1 chose control or trust
+    if group.trust == "Yes":
+        p1.payoff = 2 * group.chosen_effort
+        p2.payoff = C.ENDOWMENT_AGENT - group.chosen_effort
+    else:
+        p1.payoff = 2 * chosen_effort_control
+        p2.payoff = C.ENDOWMENT_AGENT - group.chosen_effort_control
+
 
 
 # PAGES
@@ -87,7 +102,7 @@ class SendBackWaitPage(WaitPage):
 class SendBackC5(Page):
     """This page is only for Agent. Agent can decide on effort level x."""
     form_model = 'group'
-    form_fields = ['chosen_effort', 'chosen_effort5']
+    form_fields = ['chosen_effort', 'chosen_effort_min5']
 
     @staticmethod
     def is_displayed(player: Player):
@@ -100,7 +115,7 @@ class SendBackC5(Page):
 class SendBackC10(Page):
     """This page is only for Agent. Agent can decide on effort level x."""
     form_model = 'group'
-    form_fields = ['chosen_effort', 'chosen_effort10']
+    form_fields = ['chosen_effort', 'chosen_effort_min10']
 
     @staticmethod
     def is_displayed(player: Player):
@@ -113,7 +128,7 @@ class SendBackC10(Page):
 class SendBackC20(Page):
     """This page is only for Agent. Agent can decide on effort level x."""
     form_model = 'group'
-    form_fields = ['chosen_effort', 'chosen_effort20']
+    form_fields = ['chosen_effort', 'chosen_effort_min20']
 
     @staticmethod
     def is_displayed(player: Player):

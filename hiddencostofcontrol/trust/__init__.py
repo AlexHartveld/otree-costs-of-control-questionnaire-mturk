@@ -62,7 +62,7 @@ def set_payoffs(group: Group):
         p2.payoff = C.ENDOWMENT_AGENT - group.chosen_effort
     else:
         p1.payoff = 2 * chosen_effort_control
-        p2.payoff = C.ENDOWMENT_AGENT - group.chosen_effort_control
+        p2.payoff = C.ENDOWMENT_AGENT - chosen_effort_control
 
 
 

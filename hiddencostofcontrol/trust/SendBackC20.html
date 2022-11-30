@@ -1,22 +1,14 @@
 {{ block title }}Your Choice{{ endblock }}
 {{ block content }}
-<p>
-    You are Participant B. Your Endowment is {{ C.ENDOWMENT_AGENT }}
-    How much will you send to participant A if he chooses to trust you?
-</p>
 
-{{ formfield 'chosen_effort' }}
+<p>You are player A. Your Endowment is {{ C.ENDOWMENT_AGENT }}.</p>
 
-<p>
-    You are Participant B. Your Endowment is {{ C.ENDOWMENT_AGENT }}
-    How much will you send to participant A if he chooses to control you?
-</p>
+{{ formfield 'chosen_effort' label="How much would you send to player B if he <b>chose NOT to</b> set a minimum amount?" }}
 
-{{ formfield 'chosen_effort_min20' }}
+<br>
+
+{{ formfield 'chosen_effort_min20' label="How much would you send to player B if he <b>chose to</b> set a minimum amount of 20?" }}
 
 <p>{{ next_button }}</p>
-
-
-    {{ include C.INSTRUCTIONS_TEMPLATE }}
 
 {{ endblock }}

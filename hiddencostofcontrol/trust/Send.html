@@ -2,14 +2,12 @@
 {{ block content }}
 
     <p>
-    You are Participant A. Your Now you have {{C.ENDOWMENT_PRINCIPAL}}. Do you want to trust Participant B?
+    You are player B. You have {{C.ENDOWMENT_PRINCIPAL}}. 
     </p>
 
-    {{ formfields }}
+    {{ formfield 'minimum_amount' label="Do you want set a minimum amount for player A?"}}
     <p>
     {{ next_button }}
     </p>
-
-    {{ include C.INSTRUCTIONS_TEMPLATE }}
 
 {{ endblock }}

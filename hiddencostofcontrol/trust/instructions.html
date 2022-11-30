@@ -1,19 +1,42 @@
-
 <div class="card bg-light m-3">
     <div class="card-body">
 
-    <h3>
-        Instructions
-    </h3>
-    <p>
-        You have been randomly and anonymously paired with another participant.
-        One of you will be selected at random to be participant A;
-        the other will be participant B.
-    </p>
-    <p>
-        To start, participant A receives {{ C.ENDOWMENT_PRINCIPAL }};
-        participant B receives {{ C.ENDOWMENT_AGENT }}.
-        A can trust or not, B puts some effort x in.
-    </p>
-</div>
+        <h3>
+            Instructions
+        </h3>
+
+        <p>In this experiment, player A and player B form a group. You will be randomly assigned one of the roles.
+            Participants do not know each other.</p>
+
+        <p>At the beginning of the experiment, player A gets 120 points. player B does not get any points.</p>
+
+        <h4>Player A's decision</h4>
+        <p>player A can decide how many points he wants to transfer to player B. Each point that player A transfers to
+            player B reduces his own income by one point. player B's income is increased by 2 points for each point
+            transferred.</p>
+
+        <h4>Player B's decision</h4>
+        <p>player B can set a minimum transfer before player A decides how many points he wants to transfer to player B.
+            player B can thus force player A to transfer a minimum amount to player B. However player B can also
+            decide not to force player A to make a minimum transfer, thus leaving player A free to decide.</p>
+
+        <h4>Procedure</h4>
+        <p>In the first step, player B decided whether to force player A to make a minimum transfer of X points or
+            whether to leave him free to decide on the transfer amount. In the second step player A chooses the amount
+            he wants to transfer to player B. player A must choose <b>before</b> he knows whether player B forces him to
+            make a minimum transfer or not. This means that player A has to indicate a transfer amount for both possible
+            cases.</p>
+
+        <h4>Payout</h4>
+        <p>After both players have made their decisions, the experiment is over and payouts are calculated. It first is
+            determined in each group whether player B forced player A to make a minimum transfer or whether he let him
+            decide freely. player A's transfer is then taken to be the amount that player A stated for the case that
+            player B actually chose.
+            For your participation in the experiment you will receive at least 4 dollars. You can earn additional points
+            in the experiment which will be converted into dollars with a conversion rate of 1 point = 10 dollar cents.
+        </p>
+        <p>The screen at the end informs you of the decisions made by both players and your earnings. The points you
+            have earned are converted to dollars and paid to you in addition to the $ 2.50.</p>
+
+    </div>
 </div>

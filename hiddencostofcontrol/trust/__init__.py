@@ -1,16 +1,10 @@
 from otree.api import *
 
-
-
-
 doc = """
-
 A two-stage principal-agent game is played with only one round. There is no context given, the game is framed in a neutral manner. X represents some productive activity and is costly to the agent 
 (c(x) = x) but benefits the principal (πp = 2x). The profit function of the agent is πa = 120 – x.
 The principal can either leave the choice of x to the agent or set a minimum level (x > 0), thereby re-stricting the choice set representing the level of control in this experiment design.
-
 """
-
 
 class C(BaseConstants):
     NAME_IN_URL = 'trust'
@@ -29,7 +23,7 @@ def creating_session(subsession):
         player.control = control[player.group.id % 3]
 
 class Group(BaseGroup):
-    trust = models.StringField(
+    minimum_amount = models.StringField(
         choices=['Yes', 'No'],
         widget=widgets.RadioSelectHorizontal
     )
@@ -39,8 +33,7 @@ class Group(BaseGroup):
     chosen_effort_min20 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(20), max=cu(120))
 
 class Player(BasePlayer):
-#    pass
-    control = models.IntegerField() #this is necessary since control variable is used as treatment. idk what to set it to so I just chose the models.StringField. definitely WIP only.
+    control = models.IntegerField() 
 
 
 # FUNCTIONS
@@ -56,8 +49,8 @@ def set_payoffs(group: Group):
     elif group.field_maybe_none('chosen_effort_min20') is not None: 
         chosen_effort_control = group.chosen_effort_min20
     
-    # check if p1 chose control or trust
-    if group.trust == "Yes":
+    # check if p1 chose set minimum amount or not
+    if group.minimum_amount == "No":
         p1.payoff = 2 * group.chosen_effort
         p2.payoff = C.ENDOWMENT_AGENT - group.chosen_effort
     else:
@@ -65,39 +58,24 @@ def set_payoffs(group: Group):
         p2.payoff = C.ENDOWMENT_AGENT - chosen_effort_control
 
 
-
 # PAGES
-class Introduction(Page):
+class informed_consent(Page):
     pass
 
+class Introduction(Page):
+    pass
 
 class Send(Page):
     """This page is only for Principal. Can either trust the agent or not."""
     form_model = 'group'
-    form_fields = ['trust']
+    form_fields = ['minimum_amount']
 
     @staticmethod
     def is_displayed(player: Player):
         return player.id_in_group == 1
 
-
 class SendBackWaitPage(WaitPage):
     pass
-
-
-#class SendBack(Page):
-#    """This page is only for Agent. Agent can decide on effort level x."""
-#    form_model = 'group'
-#    form_fields = ['chosen_effort']
-
-#    @staticmethod
-#    def is_displayed(player: Player):
-#        return player.id_in_group == 2
-
-#    @staticmethod
-#    def vars_for_template(player: Player):
-#        group = player.group
-
 
 class SendBackC5(Page):
     """This page is only for Agent. Agent can decide on effort level x."""
@@ -138,11 +116,8 @@ class SendBackC20(Page):
     def vars_for_template(player: Player):
         group = player.group
 
-
-
 class ResultsWaitPage(WaitPage):
     after_all_players_arrive = set_payoffs
-
 
 class Results(Page):
     """This page displays the profit of each player"""
@@ -151,14 +126,11 @@ class Results(Page):
     def vars_for_template(player: Player):
         group = player.group
 
-        #return dict(tripled_amount=group.sent_amount * C.MULTIPLIER)
-
-
 page_sequence = [
+    informed_consent,
     Introduction,
     Send,
     SendBackWaitPage,
-#    SendBack,
     SendBackC5,
     SendBackC10,
     SendBackC20,

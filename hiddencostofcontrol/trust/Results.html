@@ -3,9 +3,17 @@
 
     {{ if player.id_in_group == 1 }}
         <p>
-            You chose to trust participant B {{ group.trust }}.
-            Participant B chose effort {{ group.chosen_effort }}.
+            You chose to set a minimum amount: {{ group.minimum_amount }}.
         </p>
+        {{ if group.minimum_amount == 'Yes' }}
+            <p>Participant A chose to send {{ group.chosen_effort }}.</p>
+        {{ endif }}
+
+        {{ if group.minimum_amount == 'No' }}
+        <p>Participant A chose to send {{ group.chosen_effort }}.</p>
+        {{ endif }}
+
+
         <p>
             You were initially endowed with {{ C.ENDOWMENT_PRINCIPAL }},
             chose to trust {{ group.trust }},
@@ -29,6 +37,5 @@
 
     <p>{{ next_button }}</p>
 
-    {{ include C.INSTRUCTIONS_TEMPLATE }}
 
 {{ endblock }}

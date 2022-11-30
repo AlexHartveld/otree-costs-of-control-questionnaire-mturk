@@ -24,10 +24,9 @@ class Subsession(BaseSubsession):
     pass
 
 def creating_session(subsession):
-    import itertools
-    control = itertools.cycle([5, 10, 20])
+    control = [5, 10, 20]
     for player in subsession.get_players():
-        player.control = next(control)
+        player.control = control[player.group.id % 3 - 1]
 
 class Group(BaseGroup):
     trust = models.StringField(

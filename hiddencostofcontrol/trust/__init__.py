@@ -34,6 +34,12 @@ class Group(BaseGroup):
 
 class Player(BasePlayer):
     control = models.IntegerField() 
+    age = models.IntegerField(label='What is your age?', min=13, max=125)
+    gender = models.StringField(
+        choices=[['Male', 'Male'], ['Female', 'Female']],
+        label='What is your gender?',
+        widget=widgets.RadioSelect,
+    )
 
 
 # FUNCTIONS
@@ -61,6 +67,10 @@ def set_payoffs(group: Group):
 # PAGES
 class informed_consent(Page):
     pass
+
+class Demographics(Page):
+    form_model = 'player'
+    form_fields = ['age', 'gender']
 
 class Introduction(Page):
     pass
@@ -129,6 +139,7 @@ class Results(Page):
 page_sequence = [
     informed_consent,
     Introduction,
+    Demographics,
     Send,
     SendBackWaitPage,
     SendBackC5,

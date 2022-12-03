@@ -3,38 +3,22 @@
 
     {{ if player.id_in_group == 1 }}
         <p>
-            You chose to set a minimum amount: {{ group.minimum_amount }}.
+            You chose to set a minimum amount: {{ group.minimum_amount }}
         </p>
-        {{ if group.minimum_amount == 'Yes' }}
-            <p>Participant A chose to send {{ group.chosen_effort }}.</p>
-        {{ endif }}
-
-        {{ if group.minimum_amount == 'No' }}
-        <p>Participant A chose to send {{ group.chosen_effort }}.</p>
-        {{ endif }}
-
-
         <p>
-            You were initially endowed with {{ C.ENDOWMENT_PRINCIPAL }},
-            chose to trust {{ group.trust }},
-            received {{ group.chosen_effort }}
-            thus you now have:
-            {{ C.ENDOWMENT_PRINCIPAL }}2 * {{ group.chosen_effort }}=<strong>{{ player.payoff }}</strong>
+            Your payoff is: {{ player.payoff }}
         </p>
+
+
     {{ else }}
         <p>
-            Participant A trusted you {{ group.trust }}.
-            You chose to return {{ group.chosen_effort }}.
+            Participant A chose to set a minimum amount: {{ group.minimum_amount }}
         </p>
         <p>
-            You received {{ group.trust }},
-            chose to return {{ group.chosen_effort }}
-            thus you now have:
-            {{ C.ENDOWMENT_AGENT }})-({{ group.chosen_effort }})=<strong>{{ player.payoff }}</strong>-->
+            Your payoff is: {{ player.payoff }}
         </p>
-        .
-    {{ endif }}
 
+        {{ endif }}
     <p>{{ next_button }}</p>
 
 

@@ -4,8 +4,11 @@
     <p>
     You are player B. You have {{C.ENDOWMENT_PRINCIPAL}}. 
     </p>
-
-    {{ formfield 'minimum_amount' label="Do you want set a minimum amount for player A?"}}
+    <p>
+    <b>Do you want set a minimum amount of {{ player.control }} for player A?</b>
+    {{ formfield 'minimum_amount' label=""}}
+    <br>
+    </p>
     <p>
     {{ next_button }}
     </p>

@@ -4,18 +4,21 @@ from os import environ
 SESSION_CONFIGS = [
     dict(
         name='trust',
-        display_name="Falk & Kosfeld",
+        display_name="Experiment 1: Falk & Kosfeld",
         app_sequence=['trust', 'payment_info'],
         num_demo_participants=2,
     ),
     dict(
-        name='survey', app_sequence=['survey', 'payment_info'], num_demo_participants=1
-    ),
-    dict(
         name="sliders",
-        display_name="RET Slider task",
+        display_name="Experiment 2: Real Effort",
         num_demo_participants=1,
-        app_sequence=["sliders"],
+        app_sequence=["sliders"]
+    ),
+        dict(
+        name='survey',
+        display_name="Experiment 3: Questionnaire",
+        app_sequence=['survey', 'payment_info'], 
+        num_demo_participants=1
     )
 ]
 

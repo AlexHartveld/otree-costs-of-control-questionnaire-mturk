@@ -11,6 +11,12 @@ SESSION_CONFIGS = [
     dict(
         name='survey', app_sequence=['survey', 'payment_info'], num_demo_participants=1
     ),
+    dict(
+        name="sliders",
+        display_name="RET Slider task",
+        num_demo_participants=1,
+        app_sequence=["sliders"],
+    )
 ]
 
 # if you set a property in SESSION_CONFIG_DEFAULTS, it will be inherited by all configs
@@ -22,8 +28,8 @@ SESSION_CONFIG_DEFAULTS = dict(
     real_world_currency_per_point=1.00, participation_fee=0.00, doc=""
 )
 
-PARTICIPANT_FIELDS = []
-SESSION_FIELDS = []
+PARTICIPANT_FIELDS = ['is_dropout']
+SESSION_FIELDS = ['params']
 
 # ISO-639 code
 # for example: de, fr, ja, ko, zh-hans

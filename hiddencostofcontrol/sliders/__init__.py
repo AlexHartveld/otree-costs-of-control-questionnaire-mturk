@@ -28,9 +28,9 @@ def creating_session(subsession: Subsession):
     defaults = dict(
         trial_delay=1.0,
         retry_delay=0.1,
-        num_sliders=48,
+        num_sliders=60,
         num_columns=3,
-        attempts_per_slider=10
+        attempts_per_slider=1
     )
     session.params = {}
     for param in defaults:

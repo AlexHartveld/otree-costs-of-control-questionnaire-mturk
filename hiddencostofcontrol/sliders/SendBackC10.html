@@ -1,14 +1,37 @@
-{{ block title }}Your Choice{{ endblock }}
-{{ block content }}
+{% block styles %}
+<link href="{% static 'sliders.css' %}" rel="stylesheet" />
+{% endblock %}
 
+{{ block title }}
+Your Choice
+{{ endblock }}
+
+{{ block content }}
+<div class="d-flex flex-column align-items-center">
+    <progress id="progress-bar" max="{{ params.num_sliders }}" value="0"></progress>
+
+    <canvas id="canvas" class="m-2"></canvas>
+
+</div>
+<br>
 <p>You are player A. Your Endowment is {{ C.ENDOWMENT_AGENT }}.</p>
 
-{{ formfield 'chosen_effort' label="How much would you send to player B if he <b>chose NOT to</b> set a minimum amount?" }}
+{{ if group.minimum_amount == "Yes" }}
+<p>Player B chose to set a minimum amount of {{ player.control }}. Each slider counts 5 points, therefore at least two
+    sliders have to be moved to the middle. Please move the sliders to state your choice. You have one trial per slider to put the dot in the middle.</p>
+{{ endif }}
 
-<br>
+{{ if group.minimum_amount == "No" }}
+<p>Player B chose not to set a minimum amount of {{ player.control }}. Each slider counts 5 points. Please move the sliders
+    to state your choice. You have one trial per slider to put the dot in the middle.</p>
+{{ endif }}
 
-{{ formfield 'chosen_effort_min10' label="How much would you send to player B if he <b>chose to</b> set a minimum amount of 10?" }}
+{{ next_button }}
 
-<p>{{ next_button }}</p>
+{{ include C.INSTRUCTIONS_TEMPLATE }}
 
+{{ endblock }}
+
+{{ block scripts }}
+<script src="{{ static 'sliders.js' }}"></script>
 {{ endblock }}

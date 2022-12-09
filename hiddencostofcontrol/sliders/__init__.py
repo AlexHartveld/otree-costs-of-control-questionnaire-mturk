@@ -29,7 +29,7 @@ def creating_session(subsession: Subsession):
     defaults = dict(
         trial_delay=1.0,
         retry_delay=0.1,
-        num_sliders=60,
+        num_sliders=24,
         num_columns=3,
         attempts_per_slider=1
     )
@@ -47,10 +47,10 @@ class Group(BaseGroup):
         choices=['Yes', 'No'],
         widget=widgets.RadioSelectHorizontal
     )
-    chosen_effort = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(0), max=cu(120))
-    chosen_effort_min5 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(5), max=cu(120))
-    chosen_effort_min10 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(10), max=cu(120))
-    chosen_effort_min20 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(20), max=cu(120))
+#    chosen_effort = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(0), max=cu(120))
+#    chosen_effort_min5 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(5), max=cu(120))
+#    chosen_effort_min10 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(10), max=cu(120))
+#    chosen_effort_min20 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(20), max=cu(120))
 
 
 class Player(BasePlayer):
@@ -87,7 +87,6 @@ def set_payoffs(group: Group):
 # puzzle-specific stuff
 class Puzzle(ExtraModel):
     """A model to keep record of sliders setup"""
-
     player = models.Link(Player)
     iteration = models.IntegerField()
     timestamp = models.FloatField()
@@ -99,17 +98,14 @@ class Puzzle(ExtraModel):
     num_correct = models.IntegerField(initial=0)
     is_solved = models.BooleanField(initial=False)
 
-
 class Slider(ExtraModel):
     """A model to keep record of each slider"""
-
     puzzle = models.Link(Puzzle)
     idx = models.IntegerField()
     target = models.IntegerField()
     value = models.IntegerField()
     is_correct = models.BooleanField(initial=False)
     attempts = models.IntegerField(initial=0)
-
 
 def generate_puzzle(player: Player) -> Puzzle:
     """Create new puzzle for a player"""
@@ -131,20 +127,17 @@ def generate_puzzle(player: Player) -> Puzzle:
         )
     return puzzle
 
-
 def get_current_puzzle(player):
     puzzles = Puzzle.filter(player=player, iteration=player.iteration)
     if puzzles:
         [puzzle] = puzzles
         return puzzle
 
-
 def get_slider(puzzle, idx):
     sliders = Slider.filter(puzzle=puzzle, idx=idx)
     if sliders:
         [puzzle] = sliders
         return puzzle
-
 
 def encode_puzzle(puzzle: Puzzle):
     """Create data describing puzzle to send to client"""
@@ -159,7 +152,6 @@ def encode_puzzle(puzzle: Puzzle):
         sliders={s.idx: {'value': s.value, 'is_correct': s.is_correct} for s in sliders}
     )
 
-
 def get_progress(player: Player):
     """Return current player progress"""
     return dict(
@@ -167,13 +159,11 @@ def get_progress(player: Player):
         solved=player.num_correct
     )
 
-
 def handle_response(puzzle, slider, value):
     slider.value = task_sliders.snap_value(value, slider.target)
     slider.is_correct = slider.value == slider.target
     puzzle.num_correct = len(Slider.filter(puzzle=puzzle, is_correct=True))
     puzzle.is_solved = puzzle.num_correct == puzzle.num_sliders
-
 
 def play_game(player: Player, message: dict):
     """Main game workflow
@@ -280,11 +270,9 @@ class Send(Page):
 class SendBackWaitPage(WaitPage):
     pass
 
+
 class SendBackC5(Page):
     """This page is only for Agent. Agent can decide on effort level x."""
-    form_model = 'group'
-    form_fields = ['chosen_effort', 'chosen_effort_min5']
-
     @staticmethod
     def is_displayed(player: Player):
         return player.id_in_group == 2 and player.control == 5
@@ -293,37 +281,7 @@ class SendBackC5(Page):
     def vars_for_template(player: Player):
         group = player.group
 
-class SendBackC10(Page):
-    """This page is only for Agent. Agent can decide on effort level x."""
-    form_model = 'group'
-    form_fields = ['chosen_effort', 'chosen_effort_min10']
-
-    @staticmethod
-    def is_displayed(player: Player):
-        return player.id_in_group == 2 and player.control == 10
-
-    @staticmethod
-    def vars_for_template(player: Player):
-        group = player.group
-
-class SendBackC20(Page):
-    """This page is only for Agent. Agent can decide on effort level x."""
-    form_model = 'group'
-    form_fields = ['chosen_effort', 'chosen_effort_min20']
-
-    @staticmethod
-    def is_displayed(player: Player):
-        return player.id_in_group == 2 and player.control == 20
-
-    @staticmethod
-    def vars_for_template(player: Player):
-        group = player.group
-
-class ResultsWaitPage(WaitPage):
-    after_all_players_arrive = set_payoffs
-
-class Game(Page):
-    timeout_seconds = 120
+    timeout_seconds = 60
 
     live_method = play_game
 
@@ -350,6 +308,83 @@ class Game(Page):
             player.num_correct = puzzle.num_correct
             player.payoff = player.num_correct
 
+
+class SendBackC10(Page):
+    """This page is only for Agent. Agent can decide on effort level x."""
+    @staticmethod
+    def is_displayed(player: Player):
+        return player.id_in_group == 2 and player.control == 10
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        group = player.group
+
+    timeout_seconds = 60
+    live_method = play_game
+
+    @staticmethod
+    def js_vars(player: Player):
+        return dict(
+            params=player.session.params,
+            slider_size=task_sliders.SLIDER_BBOX,
+        )
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        return dict(
+            params=player.session.params,
+            DEBUG=settings.DEBUG
+        )
+
+    @staticmethod
+    def before_next_page(player: Player, timeout_happened):
+        puzzle = get_current_puzzle(player)
+
+        if puzzle and puzzle.response_timestamp:
+            player.elapsed_time = puzzle.response_timestamp - puzzle.timestamp
+            player.num_correct = puzzle.num_correct
+            player.payoff = player.num_correct
+
+
+class SendBackC20(Page):
+    """This page is only for Agent. Agent can decide on effort level x."""
+
+    @staticmethod
+    def is_displayed(player: Player):
+        return player.id_in_group == 2 and player.control == 20
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        group = player.group
+
+    timeout_seconds = 60
+    live_method = play_game
+
+    @staticmethod
+    def js_vars(player: Player):
+        return dict(
+            params=player.session.params,
+            slider_size=task_sliders.SLIDER_BBOX,
+        )
+
+    @staticmethod
+    def vars_for_template(player: Player):
+        return dict(
+            params=player.session.params,
+            DEBUG=settings.DEBUG
+        )
+
+    @staticmethod
+    def before_next_page(player: Player, timeout_happened):
+        puzzle = get_current_puzzle(player)
+
+        if puzzle and puzzle.response_timestamp:
+            player.elapsed_time = puzzle.response_timestamp - puzzle.timestamp
+            player.num_correct = puzzle.num_correct
+            player.payoff = player.num_correct
+
+class ResultsWaitPage(WaitPage):
+    after_all_players_arrive = set_payoffs
 
 class Results(Page):
     pass

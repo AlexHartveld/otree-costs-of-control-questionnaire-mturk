@@ -6,7 +6,7 @@
             You chose to set a minimum amount: {{ group.minimum_amount }}
         </p>
         <p>
-            Your payoff is: {{ player.payoff }}
+            Your payoff is: {{ player.payoff }} which equals to {{ participant.payoff_plus_participation_fee() }}
         </p>
 
 
@@ -15,7 +15,7 @@
             Participant A chose to set a minimum amount: {{ group.minimum_amount }}
         </p>
         <p>
-            Your payoff is: {{ player.payoff }}
+            Your payoff is: {{ player.payoff }} which equals to {{ participant.payoff_plus_participation_fee() }}
         </p>
 
         {{ endif }}

@@ -7,13 +7,7 @@ Your Choice
 {{ endblock }}
 
 {{ block content }}
-<div class="d-flex flex-column align-items-center">
-    <progress id="progress-bar" max="{{ params.num_sliders }}" value="0"></progress>
 
-    <canvas id="canvas" class="m-2"></canvas>
-
-</div>
-<br>
 <p>You are player A. Your Endowment is {{ C.ENDOWMENT_AGENT }}.</p>
 
 {{ if group.minimum_amount == "Yes" }}
@@ -26,9 +20,12 @@ Your Choice
     to state your choice. You have one trial per slider to put the dot in the middle.</p>
 {{ endif }}
 
-{{ next_button }}
+<div class="d-flex flex-column align-items-center">
+    <canvas id="canvas" class="m-2"></canvas>
+</div>
+<br>
 
-{{ include C.INSTRUCTIONS_TEMPLATE }}
+{{ next_button }}
 
 {{ endblock }}
 

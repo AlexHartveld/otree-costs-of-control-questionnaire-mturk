@@ -41,24 +41,19 @@ def creating_session(subsession: Subsession):
     for player in subsession.get_players():
         player.control = control[player.group.id % 3]
 
-
 class Group(BaseGroup):
     minimum_amount = models.StringField(
         choices=['Yes', 'No'],
         widget=widgets.RadioSelectHorizontal
     )
-#    chosen_effort = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(0), max=cu(120))
-#    chosen_effort_min5 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(5), max=cu(120))
-#    chosen_effort_min10 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(10), max=cu(120))
-#    chosen_effort_min20 = models.CurrencyField(doc="""Amount sent back by P2""", min=cu(20), max=cu(120))
-
+    chosen_effort = models.IntegerField(initial=0)
 
 class Player(BasePlayer):
     # only suported 1 iteration for now
     iteration = models.IntegerField(initial=0)
 
     num_correct = models.IntegerField(initial=0)
-    elapsed_time = models.FloatField(initial=0)
+#    elapsed_time = models.FloatField(initial=0)
 
     control = models.IntegerField() 
 
@@ -67,22 +62,12 @@ class Player(BasePlayer):
 def set_payoffs(group: Group):
     p1 = group.get_player_by_id(1)
     p2 = group.get_player_by_id(2)
-    # check which chosen_effort has a value
-    chosen_effort_control = None
-    if group.field_maybe_none('chosen_effort_min5') is not None: 
-        chosen_effort_control = group.chosen_effort_min5
-    elif group.field_maybe_none('chosen_effort_min10') is not None: 
-        chosen_effort_control = group.chosen_effort_min10
-    elif group.field_maybe_none('chosen_effort_min20') is not None: 
-        chosen_effort_control = group.chosen_effort_min20
-    
-    # check if p1 chose set minimum amount or not
-    if group.minimum_amount == "No":
-        p1.payoff = 2 * group.chosen_effort
-        p2.payoff = C.ENDOWMENT_AGENT - group.chosen_effort
-    else:
-        p1.payoff = 2 * chosen_effort_control
-        p2.payoff = C.ENDOWMENT_AGENT - chosen_effort_control
+    chosen_effort = group.field_maybe_none('chosen_effort')
+#    if chosen_effort is None:
+#        chosen_effort = 0
+    p1.payoff = 2 * chosen_effort
+    p2.payoff = C.ENDOWMENT_AGENT - chosen_effort
+
 
 # puzzle-specific stuff
 class Puzzle(ExtraModel):
@@ -277,12 +262,7 @@ class SendBackC5(Page):
     def is_displayed(player: Player):
         return player.id_in_group == 2 and player.control == 5
 
-    @staticmethod
-    def vars_for_template(player: Player):
-        group = player.group
-
     timeout_seconds = 60
-
     live_method = play_game
 
     @staticmethod
@@ -296,17 +276,16 @@ class SendBackC5(Page):
     def vars_for_template(player: Player):
         return dict(
             params=player.session.params,
-            DEBUG=settings.DEBUG
+            DEBUG=settings.DEBUG,
+            group = player.group
         )
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
         puzzle = get_current_puzzle(player)
-
-        if puzzle and puzzle.response_timestamp:
-            player.elapsed_time = puzzle.response_timestamp - puzzle.timestamp
-            player.num_correct = puzzle.num_correct
-            player.payoff = player.num_correct
+        if puzzle:
+            group = player.group
+            group.chosen_effort = 5 * puzzle.num_correct
 
 
 class SendBackC10(Page):
@@ -315,10 +294,6 @@ class SendBackC10(Page):
     def is_displayed(player: Player):
         return player.id_in_group == 2 and player.control == 10
 
-    @staticmethod
-    def vars_for_template(player: Player):
-        group = player.group
-
     timeout_seconds = 60
     live_method = play_game
 
@@ -333,18 +308,16 @@ class SendBackC10(Page):
     def vars_for_template(player: Player):
         return dict(
             params=player.session.params,
-            DEBUG=settings.DEBUG
+            DEBUG=settings.DEBUG,
+            group = player.group
         )
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
         puzzle = get_current_puzzle(player)
-
-        if puzzle and puzzle.response_timestamp:
-            player.elapsed_time = puzzle.response_timestamp - puzzle.timestamp
-            player.num_correct = puzzle.num_correct
-            player.payoff = player.num_correct
-
+        if puzzle:
+            group = player.group
+            group.chosen_effort = 5 * puzzle.num_correct
 
 class SendBackC20(Page):
     """This page is only for Agent. Agent can decide on effort level x."""
@@ -371,17 +344,17 @@ class SendBackC20(Page):
     def vars_for_template(player: Player):
         return dict(
             params=player.session.params,
-            DEBUG=settings.DEBUG
+            DEBUG=settings.DEBUG,
+            group = player.group
         )
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
         puzzle = get_current_puzzle(player)
+        if puzzle:
+            group = player.group
+            group.chosen_effort = 5 * puzzle.num_correct
 
-        if puzzle and puzzle.response_timestamp:
-            player.elapsed_time = puzzle.response_timestamp - puzzle.timestamp
-            player.num_correct = puzzle.num_correct
-            player.payoff = player.num_correct
 
 class ResultsWaitPage(WaitPage):
     after_all_players_arrive = set_payoffs
@@ -390,7 +363,7 @@ class Results(Page):
     pass
 
 page_sequence = [    
-    Introduction,
+#    Introduction,
     Send,
     SendBackWaitPage,
     SendBackC5,

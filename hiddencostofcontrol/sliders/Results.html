@@ -5,7 +5,9 @@ Results
 {{ block content }}
 
 <p>
-    Your payoff is {{ player.payoff }}.
+    Your payoff is {{ participant.payoff_plus_participation_fee() }}.
 </p>
+
+{{ next_button }}
 
 {{ endblock }}

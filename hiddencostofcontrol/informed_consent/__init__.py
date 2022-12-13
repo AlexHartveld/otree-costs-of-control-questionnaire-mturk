@@ -16,17 +16,18 @@ class Group(BaseGroup):
 
 
 class Player(BasePlayer):
-    consent = models.StringField(
-        label = 'I agree to take part in this study',
-        choices = ['Yes'],
-        widget=widgets.RadioSelectHorizontal
-    )
+#    consent = models.StringField(
+#        label = 'I agree to take part in this study',
+#        choices = ['Yes'],
+#        widget=widgets.RadioSelectHorizontal
+#    )
+    consent_given = models.BooleanField()
 
 
 # PAGES
 class informed_consent(Page):
     form_model = 'player'
-    form_fields =  ['consent']
+    form_fields =  ['consent_given']
 
 
 page_sequence = [informed_consent]

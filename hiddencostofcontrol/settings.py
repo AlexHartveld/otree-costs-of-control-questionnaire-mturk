@@ -12,7 +12,7 @@ SESSION_CONFIGS = [
         name="sliders",
         display_name="Experiment 2: Real Effort",
         num_demo_participants=2,
-        app_sequence=["sliders"]
+        app_sequence=['informed_consent','demographics','sliders','payment_info']
     ),
         dict(
         name='survey',

@@ -270,6 +270,7 @@ class SendBackC5(Page):
         return dict(
             params=player.session.params,
             slider_size=task_sliders.SLIDER_BBOX,
+            num_correct = player.num_correct,
         )
 
     @staticmethod

@@ -27,24 +27,15 @@ Your Choice
 </div>
 <br>
 
+{{ if group.minimum_amount == "No"}}
+<button class="otree-btn-next btn btn-primary" id="next_button">Next</button>
+{{ endif }}
+
+{{ if group.minimum_amount == "Yes"}}
+<button class="otree-btn-next btn btn-primary" id="next_button" disabled>Next</button>
+{{ endif }}
 
 
-
-<button class="otree-btn-next btn btn-primary" id="Next">Next</button>
-
-<script>
-    window.setInterval(function () { }, 1);
-    
-    x = js_vars.num_correct;
-
-    if (x > 1) {
-        document.getElementById("Next").disabled = false;
-    }
-    else {
-        document.getElementById("Next").disabled = true;
-    }
-
-</script>
 
 {{ endblock }}
 

@@ -271,6 +271,7 @@ class SendBackC5(Page):
             params=player.session.params,
             slider_size=task_sliders.SLIDER_BBOX,
             num_correct = player.num_correct,
+            min_number_of_correct = 1
         )
 
     @staticmethod
@@ -303,6 +304,8 @@ class SendBackC10(Page):
         return dict(
             params=player.session.params,
             slider_size=task_sliders.SLIDER_BBOX,
+            num_correct = player.num_correct,
+            min_number_of_correct = 2
         )
 
     @staticmethod
@@ -339,6 +342,8 @@ class SendBackC20(Page):
         return dict(
             params=player.session.params,
             slider_size=task_sliders.SLIDER_BBOX,
+            num_correct = player.num_correct,
+            min_number_of_correct = 4
         )
 
     @staticmethod

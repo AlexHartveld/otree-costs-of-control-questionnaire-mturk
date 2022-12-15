@@ -25,7 +25,13 @@ Your Choice
 </div>
 <br>
 
-{{ next_button }}
+{{ if group.minimum_amount == "No"}}
+<button class="otree-btn-next btn btn-primary" id="next_button">Next</button>
+{{ endif }}
+
+{{ if group.minimum_amount == "Yes"}}
+<button class="otree-btn-next btn btn-primary" id="next_button" disabled>Next</button>
+{{ endif }}
 
 {{ endblock }}
 

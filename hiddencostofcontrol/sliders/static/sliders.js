@@ -65,6 +65,16 @@ class View {
         });
     }
 
+    checkRenderNext() {
+        var number_correct = Object.keys(this.model.sliders)
+            .map(k => this.model.sliders[k].is_correct)
+            .reduce((a, c) => +a + +c);
+
+        if (number_correct >= js_vars.min_number_of_correct) {
+            document.getElementById("next_button").disabled = false;
+        }
+    }
+
     drawSlider(i, state) {
         let x0 = this.grid[i][0], y0 = this.grid[i][1];
         let w = this.slider_size[0] + 40, h = this.slider_size[1];  // +40 margin
@@ -194,6 +204,7 @@ class Controller {
         this.model.sliders[i].value = message.value;
         this.model.sliders[i].is_correct = message.is_correct;
         this.view.render();
+        this.view.checkRenderNext();
 
         if (message.is_completed) {
             window.setTimeout(() => this.endGame(), js_vars.params.trial_delay * 1000);

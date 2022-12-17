@@ -369,7 +369,7 @@ class Results(Page):
     pass
 
 page_sequence = [    
-#    Introduction,
+    Introduction,
     Send,
     SendBackWaitPage,
     SendBackC5,

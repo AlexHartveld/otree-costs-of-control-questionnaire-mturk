@@ -57,6 +57,27 @@ class Player(BasePlayer):
 
     control = models.IntegerField() 
 
+    instruction_q1 = models.StringField(
+        choices=['Yes', 'No'],
+        widget=widgets.RadioSelectHorizontal,
+        label='Player A can set a minimum amount for Player B.'
+    )
+    instruction_q2 = models.StringField(
+        choices=['Yes', 'No'],
+        widget=widgets.RadioSelectHorizontal,
+        label='Player A knows about the decision of Player B before Player A he has to decide.'
+    )
+    instruction_q3 = models.IntegerField(
+        choices=[10,11,22,23],
+        widget=widgets.RadioSelectHorizontal,
+        label='If Player B decided to set a minimum amount of 10 and Player A moved 3 sliders correctly, how many points does Player B have in the end?'
+    )
+    instruction_q4 = models.IntegerField(
+        choices=[40,80,120,160],
+        widget=widgets.RadioSelectHorizontal,
+        label='Player A moved 5 sliders correctly and therefore sent 25 points to Player B. How many points does player A have in the end?'
+    )
+
 
 # FUNCTIONS
 def set_payoffs(group: Group):
@@ -241,7 +262,8 @@ def play_game(player: Player, message: dict):
 
 # PAGES
 class Introduction(Page):
-    pass
+    form_model = 'player'
+    form_fields = ['instruction_q1','instruction_q2','instruction_q3','instruction_q4']
 
 class Send(Page):
     """This page is only for Principal. Can either trust the agent or not."""

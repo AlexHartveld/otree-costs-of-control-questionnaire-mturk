@@ -1,0 +1,90 @@
+---
+title: "Digitalization in the workplace: Hidden cost of control? - Data Analysis"
+author: Mikhail Kudimov
+date: December, 2022
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) notebook to demonstrate the data analysis process on the data obtained by the experiments within the project 'Digitalization in the workplace: Hidden cost of control?', namely 'Differences in effort provision under automated control versus human control, a replication of Falk & Kosfeld 2006 in the context of Digital Economy' academic research paper.
+```{r setup, include = FALSE}
+if (!require("dplyr")) install.packages("dplyr"); library("dplyr")
+if (!require("rstudioapi")) install.packages("rstudioapi"); library("rstudioapi")
+```
+
+## Experiment 1
+Load data for the experiment 1
+```{r}
+# TODO: load data
+```
+
+### Cleanup
+```{r}
+# clean up
+```
+
+### Demographics analysis
+```{r}
+
+```
+
+### Data examination
+```{r}
+
+```
+
+### Analysis 
+```{r}
+
+```
+
+## Experiment 2
+Load data for the experiment 2
+```{r}
+# TODO: load data
+```
+
+### Cleanup
+```{r}
+# clean up
+```
+
+### Demographics analysis
+```{r}
+
+```
+
+### Data examination
+```{r}
+
+```
+
+### Analysis 
+```{r}
+
+```
+
+## Experiment 3
+Load data for the experiment 3
+```{r}
+# TODO: load data
+```
+
+### Cleanup
+```{r}
+# clean up
+```
+
+### Demographics analysis
+```{r}
+
+```
+
+### Data examination
+```{r}
+
+```
+
+### Analysis 
+```{r}
+
+```

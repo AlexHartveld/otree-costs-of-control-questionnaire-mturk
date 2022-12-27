@@ -1,0 +1,31 @@
+{% extends "global/Page.html" %}
+{% load staticfiles otree %}
+
+{% block title %}
+    Questionnaire
+{% endblock %}
+
+{% block content %}
+
+    <div class="instructions" style="text-align:center">
+    <b>
+        Please imagine how you would react if you found yourself in the described situation and answer conscientiously the corresponding question. 
+    </b>
+    </div>
+    {% for field in form %}
+    <div class="scenario" style="margin-top: 2.5em; padding: 1em">
+    During a job interview, you presented your knowledge, experience, and qualifications truthfully. You provide your previous employer as a reference who could confirm your information. {{ field.label }}
+    <br><br> How high is your work motivation?
+    </div>
+    <br>
+    <div style="text-align:center">
+        {{ field }}
+    </div>
+    {% endfor %}
+    <hr>
+    {% next_button %}
+
+    </div>
+    </div>
+
+{% endblock %}

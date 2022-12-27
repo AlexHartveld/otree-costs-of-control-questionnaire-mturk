@@ -1,0 +1,31 @@
+{% extends "global/Page.html" %}
+{% load staticfiles otree %}
+
+{% block title %}
+    Questionnaire
+{% endblock %}
+
+{% block content %}
+
+    <div class="instructions" style="text-align:center">
+    <b>
+        Please imagine how you would react if you found yourself in the described situation and answer conscientiously the corresponding question. 
+    </b>
+    </div>
+    {% for field in form %}
+    <div class="scenario" style="margin-top: 2.5em; padding: 1em">
+        You began a new vacation job in a supermarket. Your task is to check the balances in the cash registers in the evening, meaning that you examine whether the amounts of money in the cash registers agree with the entries. In principle, you could easily swindle the supermarket by simply removing money from the cash registers. You examined the cash registers conscientiously and without cheating, and reported the results honestly. {{ field.label }}
+    <br><br> How high is your work motivation the next day?
+    </div>
+    <br>
+    <div style="text-align:center">
+        {{ field }}
+    </div>
+    {% endfor %}
+    <hr>
+    {% next_button %}
+
+    </div>
+    </div>
+
+{% endblock %}

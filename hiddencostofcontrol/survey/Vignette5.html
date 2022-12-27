@@ -1,0 +1,31 @@
+{% extends "global/Page.html" %}
+{% load staticfiles otree %}
+
+{% block title %}
+    Questionnaire
+{% endblock %}
+
+{% block content %}
+
+    <div class="instructions" style="text-align:center">
+    <b>
+        Please imagine how you would react if you found yourself in the described situation and answer conscientiously the corresponding question. 
+    </b>
+    </div>
+    {% for field in form %}
+    <div class="scenario" style="margin-top: 2.5em; padding: 1em">
+        You do various administrative tasks for a small company. Recently, an Internet access has been provided on all PCs, but this access may be used only for business purposes. {{ field.label }}
+    <br><br> How high is your work motivation?
+    </div>
+    <br>
+    <div style="text-align:center">
+        {{ field }}
+    </div>
+    {% endfor %}
+    <hr>
+    {% next_button %}
+
+    </div>
+    </div>
+
+{% endblock %}

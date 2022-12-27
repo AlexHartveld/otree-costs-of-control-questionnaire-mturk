@@ -1,0 +1,30 @@
+{% extends "global/Page.html" %}
+{% load staticfiles otree %}
+
+{% block title %}
+    Questionnaire
+{% endblock %}
+
+{% block content %}
+
+    <div class="instructions" style="text-align:center">
+    <b>
+        Please imagine how you would react if you found yourself in the described situation and answer conscientiously the corresponding question. 
+    </b>
+    </div>
+    {% for field in form %}
+    <div class="scenario" style="margin-top: 2.5em; padding: 1em">
+        During your studies, you start working in a small family-owned company. The head of the company explains to you that for cost reasons it is not allowed to use the photocopier or the printer for private purposes. You clearly plan to adhere to this directive. {{ field.label }}
+    <br><br> How high is your work motivation?
+    </div>
+    <br>
+    <div style="text-align:center">
+        {{ field }}
+    </div>
+    {% endfor %}
+    <hr>
+    {% next_button %}
+    </div>
+    </div>
+
+{% endblock %}

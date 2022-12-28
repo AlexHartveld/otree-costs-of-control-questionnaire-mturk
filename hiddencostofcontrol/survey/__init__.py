@@ -6,7 +6,7 @@ class C(BaseConstants):
     NAME_IN_URL = 'survey'
     PLAYERS_PER_GROUP = None
     vignettes = ['1', '2', '3', '4', '5']
-    NUM_ROUNDS = len(vignettes)
+    NUM_ROUNDS =  len(vignettes)
     StandardChoices=[
         [1, 'Very low'],
         [2, 'Low'],
@@ -17,13 +17,18 @@ class C(BaseConstants):
 
 class Subsession(BaseSubsession):
     pass
-def creating_session(self):
-    if self.round_number == 1:
-        for p in self.get_players():
+def creating_session(subsession: Subsession):
+    if subsession.round_number == 1:
+        for p in subsession.get_players():
             round_numbers = list(range(1, C.NUM_ROUNDS + 1))
             random.shuffle(round_numbers)
             p.participant.vars['surveys_rounds'] = dict(zip(C.vignettes, round_numbers))
-            #p.participant.vars['num_rounds'] = C.NUM_ROUNDS
+            random_treatment_ids = []
+            for i in range(C.NUM_ROUNDS):
+                random_treatment_ids.append(random.randint(0,3))
+            p.participant.random_treatment_ids = dict(zip(C.vignettes, random_treatment_ids))
+            
+                
 
 class Group(BaseGroup):
     pass
@@ -146,10 +151,6 @@ class Player(BasePlayer):
 #     return progress
 
 
-class CognitiveReflectionTest(Page):
-    form_model = 'player'
-    form_fields = ['crt_bat', 'crt_widget', 'crt_lake']
-
 class Vignette1(Page):
     form_model = 'player'
     def is_displayed(self):
@@ -163,7 +164,8 @@ class Vignette1(Page):
         'item1autocontrol',
         'item1monitoring',
         ]
-        return [random.choice(conditions)]
+        return [conditions[self.participant.vars['random_treatment_ids']['1']]]
+        
 
     # def vars_for_template(self):
     #     #curpageindex = page_sequence.index(type(self)) - 1
@@ -185,7 +187,7 @@ class Vignette2(Page):
         'item2autocontrol',
         'item2monitoring',
         ]
-        return [random.choice(conditions)]
+        return [conditions[self.participant.vars['random_treatment_ids']['2']]]
 
     # def vars_for_template(self):
     #     #curpageindex = page_sequence.index(type(self)) - 1
@@ -207,7 +209,7 @@ class Vignette3(Page):
         'item3autocontrol',
         'item3monitoring',
         ]
-        return [random.choice(conditions)]
+        return [conditions[self.participant.vars['random_treatment_ids']['3']]]
 
     # def vars_for_template(self):
     #     #curpageindex = page_sequence.index(type(self)) - 1
@@ -229,7 +231,7 @@ class Vignette4(Page):
         'item4autocontrol',
         'item4monitoring',
         ]
-        return [random.choice(conditions)]
+        return [conditions[self.participant.vars['random_treatment_ids']['4']]]
 
     # def vars_for_template(self):
     #     #curpageindex = page_sequence.index(type(self)) - 1
@@ -250,7 +252,7 @@ class Vignette5(Page):
         'item5autocontrol',
         'item5monitoring',
         ]
-        return [random.choice(conditions)]
+        return [conditions[self.participant.vars['random_treatment_ids']['5']]]
 
     # def vars_for_template(self):
     #     #curpageindex = page_sequence.index(type(self)) - 1
@@ -260,12 +262,12 @@ class Vignette5(Page):
     #     }
 
 page_sequence = [
-    Vignette1,
-    Vignette2,
-    Vignette3,
+    Vignette1, 
+    Vignette2, 
+    Vignette3, 
     Vignette4,
-    Vignette5,
+    Vignette5
 ]
 
-pages_per_round = len(page_sequence)
-tot_pages = pages_per_round * C.NUM_ROUNDS
+# pages_per_round = len(page_sequence)
+# tot_pages = pages_per_round * C.NUM_ROUNDS

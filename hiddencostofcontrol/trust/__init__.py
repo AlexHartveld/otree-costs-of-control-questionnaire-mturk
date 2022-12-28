@@ -45,9 +45,9 @@ class Player(BasePlayer):
         label='Player A knows about the decision of Player B before Player A he has to decide.'
     )
     instruction_q3 = models.IntegerField(
-        choices=[10,11,22,23],
+        choices=[10,11,22,44],
         widget=widgets.RadioSelectHorizontal,
-        label='If Player B decided to set a minimum amount of 10 and Player A stated to send 23 in case no minimum amount was set and 11 in case a minimum amount has been set, how many points does Player B have in the end?'
+        label='Player B decided to set a minimum amount of 10 and Player A stated to send 23 points in case of no minimum amount and 11 in case of a minimum amount, how many points does Player B have in the end?'
     )
     instruction_q4 = models.IntegerField(
         choices=[40,80,120,160],

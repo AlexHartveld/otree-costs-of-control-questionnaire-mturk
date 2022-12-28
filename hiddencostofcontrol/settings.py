@@ -63,3 +63,5 @@ Here are some oTree games.
 SECRET_KEY = '1875695137541'
 
 INSTALLED_APPS = ['otree']
+
+PARTICIPANT_FIELDS = ['random_treatment_ids']

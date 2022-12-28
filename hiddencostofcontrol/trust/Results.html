@@ -3,19 +3,19 @@
 
     {{ if player.id_in_group == 1 }}
         <p>
-            You chose to set a minimum amount: {{ group.minimum_amount }}
+            Did you choose to set a minimum amount? {{ group.minimum_amount }}
         </p>
         <p>
-            Your payoff is: {{ player.payoff }} which equals to {{ participant.payoff_plus_participation_fee() }}
+            Your payoff is: {{ player.payoff }}. With the $0.25 this equals to {{ participant.payoff_plus_participation_fee() }}
         </p>
 
 
     {{ else }}
         <p>
-            Participant A chose to set a minimum amount: {{ group.minimum_amount }}
+            Did participant A choose to set a minimum amount? {{ group.minimum_amount }}
         </p>
         <p>
-            Your payoff is: {{ player.payoff }} which equals to {{ participant.payoff_plus_participation_fee() }}
+            Your payoff is: {{ player.payoff }}. With the $0.25 this equals to an income of {{ participant.payoff_plus_participation_fee() }}
         </p>
 
         {{ endif }}

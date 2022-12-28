@@ -8,16 +8,16 @@ Your Choice
 
 {{ block content }}
 
-<p>You are player A. Your Endowment is {{ C.ENDOWMENT_AGENT }}.</p>
+<p>You are player A. Your have {{ C.ENDOWMENT_AGENT }} points.</p>
 
 {{ if group.minimum_amount == "Yes" }}
-<p>Player B chose to set a minimum amount of {{ player.control }}. Each slider counts 5 points, therefore at least four
-    sliders have to be moved to the middle. Please move the sliders to state your choice. You have one trial per slider to put the dot in the middle.</p>
+<p>Player B chose to set a minimum amount of {{ player.control }}. Each slider counts as 5 points, therefore at least four
+    sliders have to be moved to the middle. Please move the sliders to state your choice. You have one try per slider to put the dot in the middle.</p>
 {{ endif }}
 
 {{ if group.minimum_amount == "No" }}
 <p>Player B chose not to set a minimum amount of {{ player.control }}. Each slider counts 5 points. Please move the sliders
-    to state your choice. You have one trial per slider to put the dot in the middle.</p>
+    to state your choice. You have one try per slider to put the dot in the middle.</p>
 {{ endif }}
 
 <div class="d-flex flex-column align-items-center">

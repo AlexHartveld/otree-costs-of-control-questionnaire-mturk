@@ -284,7 +284,7 @@ class SendBackC5(Page):
     def is_displayed(player: Player):
         return player.id_in_group == 2 and player.control == 5
 
-    timeout_seconds = 60
+#    timeout_seconds = 60
     live_method = play_game
 
     @staticmethod
@@ -318,7 +318,7 @@ class SendBackC10(Page):
     def is_displayed(player: Player):
         return player.id_in_group == 2 and player.control == 10
 
-    timeout_seconds = 60
+#    timeout_seconds = 60
     live_method = play_game
 
     @staticmethod
@@ -356,7 +356,7 @@ class SendBackC20(Page):
     def vars_for_template(player: Player):
         group = player.group
 
-    timeout_seconds = 60
+#    timeout_seconds = 60
     live_method = play_game
 
     @staticmethod

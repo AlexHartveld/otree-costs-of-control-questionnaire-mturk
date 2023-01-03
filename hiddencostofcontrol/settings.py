@@ -28,11 +28,28 @@ SESSION_CONFIGS = [
 # e.g. self.session.config['participation_fee']
 
 SESSION_CONFIG_DEFAULTS = dict(
-    real_world_currency_per_point=0.01, participation_fee=0.25, doc=""
+    real_world_currency_per_point=0.01, participation_fee=0.25, doc="",
+    mturk_hit_settings=dict(
+        keywords='bonus, study',
+        title='Study: Hidden costs of control',
+        description='Our experiment lets participants play a short game with other participants, and/or answer a few question. We are interested in how people provide effort under different conditions.',
+        frame_height=500,
+        template='global/mturk_template.html',
+        minutes_allotted_per_assignment=8,
+        expiration_hours=1, # 7 * 24,
+        qualification_requirements=[
+            {
+            'QualificationTypeId': "36AGRGPO8VC7SA83E1O82NC4TWFCAY",
+            'Comparator': "DoesNotExist",
+            }],
+        grant_qualification_id='36AGRGPO8VC7SA83E1O82NC4TWFCAY', # to prevent retakes
+        ),
 )
 
 PARTICIPANT_FIELDS = ['is_dropout']
 SESSION_FIELDS = ['params']
+
+
 
 # ISO-639 code
 # for example: de, fr, ja, ko, zh-hans
@@ -44,9 +61,8 @@ USE_POINTS = True
 
 ROOMS = [
     dict(
-        name='econ101',
-        display_name='Econ 101 class',
-        participant_label_file='_rooms/econ101.txt',
+        name='mturk_room_hcoc',
+        display_name='WU Vienna Experiment HCOC',
     ),
     dict(name='live_demo', display_name='Room for live demo (no participant labels)'),
 ]

@@ -1,5 +1,3 @@
 # oTree-may-not-overwrite-this-file
 Pillow
-otree==5.9.7
-psycopg2>=2.8.4
-sentry-sdk>=0.7.9
+otree[mturk]

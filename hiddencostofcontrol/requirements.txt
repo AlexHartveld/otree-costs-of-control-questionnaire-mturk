@@ -1,3 +1,4 @@
 # oTree-may-not-overwrite-this-file
 Pillow
 otree[mturk]
+psycopg2

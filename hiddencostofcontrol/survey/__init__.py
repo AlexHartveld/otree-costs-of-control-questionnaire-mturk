@@ -48,12 +48,12 @@ class Player(BasePlayer):
         widget=widgets.RadioSelectHorizontal
     )
     item1autocontrol = models.IntegerField(
-        label='Condition C',
+        label='The cash entries are logged on a remote server, so the cash balance must be equal to the balance displayed on the server.',
         choices=C.StandardChoices,
         widget=widgets.RadioSelectHorizontal
     )
     item1monitoring = models.IntegerField(
-        label='Condition D',
+        label='There are multiple cameras monitoring the cash desks. Employees would be seen swiping cash.',
         choices=C.StandardChoices,
         widget=widgets.RadioSelectHorizontal
     )
@@ -69,12 +69,12 @@ class Player(BasePlayer):
         widget=widgets.RadioSelectHorizontal
     )
     item2autocontrol = models.IntegerField(
-        label='Condition C',
+        label='You receive your daily tasks through an app with an estimate of the working times required.',
         choices=C.StandardChoices,
         widget=widgets.RadioSelectHorizontal
     )
     item2monitoring = models.IntegerField(
-        label='Condition D',
+        label='You need to have a background computer program running that takes random screenshots and measures your activity through keystrokes.',
         choices=C.StandardChoices,
         widget=widgets.RadioSelectHorizontal
     )
@@ -90,12 +90,12 @@ class Player(BasePlayer):
         widget=widgets.RadioSelectHorizontal
     )
     item3autocontrol = models.IntegerField(
-        label='Condition C',
+        label='The new employer asks you to do a 2-hour exam that outputs a hire / non-hire recommendation. ',
         choices=C.StandardChoices,
         widget=widgets.RadioSelectHorizontal
     )
     item3monitoring = models.IntegerField(
-        label='Condition D',
+        label='The new employer uploads your CV to a database that verifies the accuracy of your qualifications. ',
         choices=C.StandardChoices,
         widget=widgets.RadioSelectHorizontal
     )
@@ -111,12 +111,12 @@ class Player(BasePlayer):
         widget=widgets.RadioSelectHorizontal
     )
     item4autocontrol = models.IntegerField(
-        label='Condition C',
+        label='You get a key card that limits your copies to 15 pages per day. ',
         choices=C.StandardChoices,
         widget=widgets.RadioSelectHorizontal
     )
     item4monitoring = models.IntegerField(
-        label='Condition D',
+        label='A copy of all files being printed/photocopied is automatically uploaded onto a remote server which can be viewed by management.  ',
         choices=C.StandardChoices,
         widget=widgets.RadioSelectHorizontal
     )
@@ -133,12 +133,12 @@ class Player(BasePlayer):
     )
     # control and monitoring may be the same...
     item5autocontrol = models.IntegerField(
-        label='Condition C',
+        label='Management has purchased a firewall that blocks sites that are on a blacklist, which is continuously kept up-to-date. ',
         choices=C.StandardChoices,
         widget=widgets.RadioSelectHorizontal
     )
     item5monitoring = models.IntegerField(
-        label='Condition D',
+        label='Management installs a special software, in which suspected abuses are flagged by an AI software and a summary report is sent to management.',
         choices=C.StandardChoices,
         widget=widgets.RadioSelectHorizontal
     )

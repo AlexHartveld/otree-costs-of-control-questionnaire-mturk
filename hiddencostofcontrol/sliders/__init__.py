@@ -59,10 +59,8 @@ def set_payoffs(group: Group):
     p1 = group.get_player_by_id(1)
     p2 = group.get_player_by_id(2)
     chosen_effort = group.field_maybe_none('chosen_effort')
-#    if chosen_effort is None:
-#        chosen_effort = 0
-    p1.payoff = 2 * chosen_effort
-    p2.payoff = C.ENDOWMENT_AGENT - chosen_effort
+    p1.payoff = 5 * chosen_effort
+    p2.payoff = 40
 
 
 # puzzle-specific stuff
@@ -249,8 +247,7 @@ class Send(Page):
         return player.id_in_group == 1
 
 class SendBackWaitPage(WaitPage):
-    #title_text = "Custom title text"
-    body_text = "Player A is currently on the move. This may take up to 5 minutes."
+    pass
 
 
 class SendBackC5(Page):
@@ -259,7 +256,6 @@ class SendBackC5(Page):
     def is_displayed(player: Player):
         return player.id_in_group == 2 and player.control == 5
 
-#    timeout_seconds = 60
     live_method = play_game
 
     @staticmethod
@@ -284,7 +280,7 @@ class SendBackC5(Page):
         puzzle = get_current_puzzle(player)
         if puzzle:
             group = player.group
-            group.chosen_effort = 5 * puzzle.num_correct
+            group.chosen_effort = puzzle.num_correct
 
 
 class SendBackC10(Page):
@@ -293,7 +289,6 @@ class SendBackC10(Page):
     def is_displayed(player: Player):
         return player.id_in_group == 2 and player.control == 10
 
-#    timeout_seconds = 60
     live_method = play_game
 
     @staticmethod
@@ -318,7 +313,7 @@ class SendBackC10(Page):
         puzzle = get_current_puzzle(player)
         if puzzle:
             group = player.group
-            group.chosen_effort = 5 * puzzle.num_correct
+            group.chosen_effort = puzzle.num_correct
 
 class SendBackC20(Page):
     """This page is only for Agent. Agent can decide on effort level x."""
@@ -331,7 +326,6 @@ class SendBackC20(Page):
     def vars_for_template(player: Player):
         group = player.group
 
-#    timeout_seconds = 60
     live_method = play_game
 
     @staticmethod
@@ -356,14 +350,16 @@ class SendBackC20(Page):
         puzzle = get_current_puzzle(player)
         if puzzle:
             group = player.group
-            group.chosen_effort = 5 * puzzle.num_correct
+            group.chosen_effort = puzzle.num_correct
 
 
 class ResultsWaitPage(WaitPage):
+    body_text = "You made your decision, the other player is currently moving sliders for you. Wait here to see the results (max. 60 seconds)."
     after_all_players_arrive = set_payoffs
 
 class Results(Page):
-    pass
+    def vars_for_template(player: Player):
+        group = player.group
 
 page_sequence = [    
     StartWaitPage,

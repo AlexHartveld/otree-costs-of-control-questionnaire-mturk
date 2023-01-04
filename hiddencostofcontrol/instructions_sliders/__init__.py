@@ -28,21 +28,15 @@ class Player(BasePlayer):
         label='Player A knows about the decision of Player B before Player A he has to decide.'
     )
     instruction_q3 = models.IntegerField(
-        choices=[10,11,22,23],
+        choices=[10,13,15,25],
         widget=widgets.RadioSelectHorizontal,
         label='If Player B decided to set a minimum amount of 10 and Player A moved 3 sliders correctly, how many points does Player B have in the end?'
     )
-    instruction_q4 = models.IntegerField(
-        choices=[40,80,120,160],
-        widget=widgets.RadioSelectHorizontal,
-        label='Player A moved 5 sliders correctly and therefore sent 25 points to Player B. How many points does player A have in the end?'
-    )
-
 
 # PAGES
 class Introduction(Page):
     form_model = 'player'
-    form_fields = ['instruction_q1','instruction_q2','instruction_q3','instruction_q4']
+    form_fields = ['instruction_q1','instruction_q2','instruction_q3']
 
 
 page_sequence = [Introduction]

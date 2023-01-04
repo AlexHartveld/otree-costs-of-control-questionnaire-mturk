@@ -17,7 +17,6 @@ class C(BaseConstants):
     NAME_IN_URL = "sliders"
     PLAYERS_PER_GROUP = 2
     NUM_ROUNDS = 1
-    INSTRUCTIONS_TEMPLATE = "sliders/instructions.html"
     ENDOWMENT_AGENT = cu(120) #Agents endowment
     ENDOWMENT_PRINCIPAL = cu(0) #Principals endowment
 
@@ -51,32 +50,8 @@ class Group(BaseGroup):
 class Player(BasePlayer):
     # only suported 1 iteration for now
     iteration = models.IntegerField(initial=0)
-
     num_correct = models.IntegerField(initial=0)
-#    elapsed_time = models.FloatField(initial=0)
-
     control = models.IntegerField() 
-
-    instruction_q1 = models.StringField(
-        choices=['Yes', 'No'],
-        widget=widgets.RadioSelectHorizontal,
-        label='Player A can set a minimum amount for Player B.'
-    )
-    instruction_q2 = models.StringField(
-        choices=['Yes', 'No'],
-        widget=widgets.RadioSelectHorizontal,
-        label='Player A knows about the decision of Player B before Player A he has to decide.'
-    )
-    instruction_q3 = models.IntegerField(
-        choices=[10,11,22,23],
-        widget=widgets.RadioSelectHorizontal,
-        label='If Player B decided to set a minimum amount of 10 and Player A moved 3 sliders correctly, how many points does Player B have in the end?'
-    )
-    instruction_q4 = models.IntegerField(
-        choices=[40,80,120,160],
-        widget=widgets.RadioSelectHorizontal,
-        label='Player A moved 5 sliders correctly and therefore sent 25 points to Player B. How many points does player A have in the end?'
-    )
 
 
 # FUNCTIONS
@@ -261,9 +236,8 @@ def play_game(player: Player, message: dict):
 
 
 # PAGES
-class Introduction(Page):
-    form_model = 'player'
-    form_fields = ['instruction_q1','instruction_q2','instruction_q3','instruction_q4']
+class StartWaitPage(WaitPage):
+    group_by_arrival_time = True
 
 class Send(Page):
     """This page is only for Principal. Can either trust the agent or not."""
@@ -275,7 +249,8 @@ class Send(Page):
         return player.id_in_group == 1
 
 class SendBackWaitPage(WaitPage):
-    pass
+    #title_text = "Custom title text"
+    body_text = "Player A is currently on the move. This may take up to 5 minutes."
 
 
 class SendBackC5(Page):
@@ -391,7 +366,7 @@ class Results(Page):
     pass
 
 page_sequence = [    
-    Introduction,
+    StartWaitPage,
     Send,
     SendBackWaitPage,
     SendBackC5,

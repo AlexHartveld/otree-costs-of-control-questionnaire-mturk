@@ -6,85 +6,315 @@ output: html_notebook
 ---
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) notebook to demonstrate the data analysis process on the data obtained by the experiments within the project 'Digitalization in the workplace: Hidden cost of control?', namely 'Differences in effort provision under automated control versus human control, a replication of Falk & Kosfeld 2006 in the context of Digital Economy' academic research paper.
+
 ```{r setup, include = FALSE}
 if (!require("dplyr")) install.packages("dplyr"); library("dplyr")
+if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
+if (!require("coin")) install.packages("coin"); library("coin")
 if (!require("rstudioapi")) install.packages("rstudioapi"); library("rstudioapi")
+if (!require("SmartEDA")) install.packages("SmartEDA"); library("SmartEDA")
 ```
 
 ## Experiment 1
+
 Load data for the experiment 1
+
 ```{r}
-# TODO: load data
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+trust_df <- read.csv("data/trust.csv")
 ```
 
-### Cleanup
+### Describe data
+
 ```{r}
-# clean up
+ExpData(trust_df, type = 1)
 ```
 
-### Demographics analysis
 ```{r}
+ExpData(trust_df, type = 2)
 
+ExpNumStat(trust_df, gp = "trust.1.group.minimum_amount", Outlier = TRUE, round = 2)
 ```
 
-### Data examination
-```{r}
+### Explore data
 
+Plotting the categorical variables in the dataset
+
+```{r}
+ExpCatViz(trust_df)
 ```
 
-### Analysis 
+Some insight that can be drawn:
+
+-   roughly equal distribution of gender data with a slight tilt towards female majority. However, no other genders are represented.
+
+-   the participants are more or less equally distributed across age groups with the exception of '45-54' one, being chosen only by 12% of respondents in comparison to 16-19% of others.
+
+-   the majority of participants has a bachelor's degree or high school or lower, with the least number of participants having a master's degree.
+
+-   out of all, the treatment with 20 as minimum amount to be set (C20) had the smallest dispersion of values of chosen effort.
+
+Let us see the how the chosen effort average is distributed along the age groups:
+
+```{r}
+df_demographics <- trust_df %>%
+  select(c(demographics.1.player.age,demographics.1.player.highest_education, demographics.1.player.gender, trust.1.group.chosen_effort))
+
+ggplot(df_demographics) + 
+  geom_bar(aes(x=demographics.1.player.age, y=trust.1.group.chosen_effort, fill = as.factor(demographics.1.player.age)), 
+           position = "dodge", stat = "summary", fun = "mean") +
+  labs(x = "Age", y = "Chosen effort") +
+  theme(legend.position="none")
+```
+
+We can notice that age group 45-54 showed below average mean choice of effort level.
+
+Let's have a look at the distribution of chosen effort across highest achieved education by participant:
+
+```{r}
+ggplot(df_demographics) + 
+  geom_bar(aes(x=demographics.1.player.highest_education, y=trust.1.group.chosen_effort, fill = as.factor(demographics.1.player.highest_education)), 
+           position = "dodge", stat = "summary", fun = "mean") +
+  labs(x = "Highest education", y = "Chosen effort") +
+  theme(legend.position="none")
+```
+
+No notable differences are present here except that 'Prefer not to say' respondents had a lower chosen effort mean by a few points.
+
+Analyzing the same differences per gender, not notable difference can be observed.
+
+```{r}
+ggplot(df_demographics) + 
+  geom_bar(aes(x=demographics.1.player.gender, y=trust.1.group.chosen_effort, fill = as.factor(demographics.1.player.gender)), 
+           position = "dodge", stat = "summary", fun = "mean") +
+  labs(x = "Gender", y = "Chosen effort") +
+  theme(legend.position="none")
+```
+
+### Prepare data
+
+Since the participants are split into principal/agent pairs, the dataset contains information about experiment values (chosen effort if not controlled, effort if controlled) in both rows - for the principal and the agent, essentially duplicating these data.
+
+```{r}
+head(trust_df)
+```
+
+Let us then have only agent rows in a separate dataframe
+
+```{r}
+trust_df_agent <- trust_df %>%
+  filter(participant.id_in_session %% 2 == 0)
+```
+
+Apart from that, let's separate each treatment into a dataframe for convenience
+
+```{r}
+trust_c5 <- trust_df_agent %>%
+  filter(!is.na(trust.1.group.chosen_effort_min5))
+
+trust_c10 <- trust_df_agent %>%
+  filter(!is.na(trust.1.group.chosen_effort_min10))
+
+trust_c20 <- trust_df_agent %>%
+  filter(!is.na(trust.1.group.chosen_effort_min20))
+```
+
+Thus, in each dataframe, `trust.1.group.chosen_effort` is the chosen effort if no minimum amount is set and `trust.1.group.chosen_effort_min5` , `trust.1.group.chosen_effort_min10` and `trust.1.group.chosen_effort_min20` is the chosen effort if the minimum amount is set for treatments C5, C10 and C20, respectively.
+
+### Analysis
+
+In this section we will be aiming to conduct several tests to understand if hidden costs of control are present in the results of the this experiment. The significance level $\alpha$ here and further on is chosen to be 5%.
+
+Firstly, we will test if there is difference in effort provision in cases of controlling and not controlling, with the null hypothesis being that the groups are the same. This will be done by modifying chosen effort in no control scenario to always be above minimum amount (setting all those that are lower to a minimum amount).
+
+```{r}
+trust_c5 <- trust_c5 %>%
+  mutate(trust.1.group.chosen_effort_modified = ifelse(trust.1.group.chosen_effort < 5, 5, trust.1.group.chosen_effort))
+
+test1_c5 <- data.frame(
+  effort = c(trust_c5$trust.1.group.chosen_effort_min5, trust_c5$trust.1.group.chosen_effort_modified), 
+  group = factor(rep(c("control", "no control"), c(16, 16)))
+)
+
+wilcox.test(trust_c5$trust.1.group.chosen_effort_min5, trust_c5$trust.1.group.chosen_effort_modified, data = test1_c5, paired = T, exact = F)
+```
+
+As we can see, the p-value `0.007467` , well below the chosen significance level of `0.5` , meaning that these groups do indeed differ.
+
+Let's look at the means of groups.
+
+```{r}
+mean(trust_c5$trust.1.group.chosen_effort_min5)
+mean(trust_c5$trust.1.group.chosen_effort_modified)
+```
+
+We can see that, as expected, mean effort provision with no control is higher.
+
+Let's test the same hypothesis for C10 treatment:
+
+```{r}
+trust_c10 <- trust_c10 %>%
+  mutate(trust.1.group.chosen_effort_modified = ifelse(trust.1.group.chosen_effort < 10, 10, trust.1.group.chosen_effort))
+
+test1_c10 <- data.frame(
+  effort = c(trust_c10$trust.1.group.chosen_effort_min10, trust_c10$trust.1.group.chosen_effort_modified), 
+  group = factor(rep(c("control", "no control"), c(17, 17)))
+)
+
+wilcox.test(trust_c10$trust.1.group.chosen_effort_min10, trust_c10$trust.1.group.chosen_effort_modified, data = test1_c10, paired = T, exact = F)
+```
+
+Again, the null hypothesis is rejected.
+
+Having look at the means, no control has greater mean effort provision.
+
+```{r}
+mean(trust_c10$trust.1.group.chosen_effort_min10)
+mean(trust_c10$trust.1.group.chosen_effort_modified)
+```
+
+Finally, test C20 treatment.
+
+```{r}
+trust_c20 <- trust_c20 %>%
+  mutate(trust.1.group.chosen_effort_modified = ifelse(trust.1.group.chosen_effort < 20, 20, trust.1.group.chosen_effort))
+
+test1_c20 <- data.frame(
+  effort = c(trust_c20$trust.1.group.chosen_effort_min20, trust_c20$trust.1.group.chosen_effort_modified), 
+  group = factor(rep(c("control", "no control"), c(17, 17)))
+)
+
+wilcox.test(trust_c20$trust.1.group.chosen_effort_min20, trust_c20$trust.1.group.chosen_effort_modified, data = test1_c20, paired = T, exact = F)
+```
+
+Again, we reject the null hypothesis.
+
+The mean of effort provision is again greater for no control.
+
+```{r}
+mean(trust_c20$trust.1.group.chosen_effort_min20)
+mean(trust_c20$trust.1.group.chosen_effort_modified)
+```
+
+Now, let us conduct the second test for these treatments. We will be testing if the hidden costs of control outweigh the benefits. That is, if effort provision is greater for no control situations even if no adjustment with setting values lesser than minimum amount to minimum amount is implemented.
+
+```{r}
+# C5
+wilcox.test(trust_c5$trust.1.group.chosen_effort_min5, trust_c5$trust.1.group.chosen_effort, paired = T, exact = F)
+
+# C10
+wilcox.test(trust_c10$trust.1.group.chosen_effort_min10, trust_c10$trust.1.group.chosen_effort, paired = T, exact = F)
+
+# C20
+wilcox.test(trust_c20$trust.1.group.chosen_effort_min20, trust_c20$trust.1.group.chosen_effort, paired = T, exact = F)
+```
+
+All tests show significant difference, meaning that in all treatments more effort is provided in case the principal trusts.
+
+Indeed, looking at means and medians of these groups, in all treatments the no control decision yeilds greater effort.
+
+```{r}
+mean(trust_c5$trust.1.group.chosen_effort_min5)
+mean(trust_c5$trust.1.group.chosen_effort)
+median(trust_c5$trust.1.group.chosen_effort_min5)
+median(trust_c5$trust.1.group.chosen_effort)
+
+mean(trust_c10$trust.1.group.chosen_effort_min10)
+mean(trust_c10$trust.1.group.chosen_effort)
+median(trust_c10$trust.1.group.chosen_effort_min10)
+median(trust_c10$trust.1.group.chosen_effort)
+
+mean(trust_c20$trust.1.group.chosen_effort_min20)
+mean(trust_c20$trust.1.group.chosen_effort)
+median(trust_c20$trust.1.group.chosen_effort_min20)
+median(trust_c20$trust.1.group.chosen_effort)
+```
+
+The last analysis of the results of this experiment aim to assess the heterogeneity of the agents of all treatments. All agents were presented with a choice to enter the effort level for both cases - no control and with control, meaning that they could either react negatively to control (effort with control is less than without), neutrally (the effort value is the same) or positively (effort with control is greater than without).
+
 ```{r}
 
+sum(trust_c5$trust.1.group.chosen_effort > trust_c5$trust.1.group.chosen_effort_min5, na.rm=TRUE)/nrow(trust_c5)
+sum(trust_c5$trust.1.group.chosen_effort == trust_c5$trust.1.group.chosen_effort_min5, na.rm=TRUE)/nrow(trust_c5)
+sum(trust_c5$trust.1.group.chosen_effort < trust_c5$trust.1.group.chosen_effort_min5, na.rm=TRUE)/nrow(trust_c5)
 ```
+
+```{r}
+
+sum(trust_c10$trust.1.group.chosen_effort > trust_c10$trust.1.group.chosen_effort_min10, na.rm=TRUE)/nrow(trust_c10)
+sum(trust_c10$trust.1.group.chosen_effort == trust_c10$trust.1.group.chosen_effort_min10, na.rm=TRUE)/nrow(trust_c10)
+sum(trust_c10$trust.1.group.chosen_effort < trust_c10$trust.1.group.chosen_effort_min10, na.rm=TRUE)/nrow(trust_c10)
+```
+
+```{r}
+
+sum(trust_c20$trust.1.group.chosen_effort > trust_c20$trust.1.group.chosen_effort_min20, na.rm=TRUE)/nrow(trust_c20)
+sum(trust_c20$trust.1.group.chosen_effort == trust_c20$trust.1.group.chosen_effort_min20, na.rm=TRUE)/nrow(trust_c20)
+sum(trust_c20$trust.1.group.chosen_effort < trust_c20$trust.1.group.chosen_effort_min20, na.rm=TRUE)/nrow(trust_c20)
+```
+
+As depicted, the group of agent reacting negatively to control is the dominant one in all three treatments (69%, 94% and 65%). It is they, who are responsible for the existence of hidden costs of control, and because of them, on average, it does not pay off for the principle to control their agent.
 
 ## Experiment 2
+
 Load data for the experiment 2
+
 ```{r}
 # TODO: load data
 ```
 
 ### Cleanup
+
 ```{r}
 # clean up
 ```
 
 ### Demographics analysis
+
 ```{r}
 
 ```
 
 ### Data examination
+
 ```{r}
 
 ```
 
-### Analysis 
+### Analysis
+
 ```{r}
 
 ```
 
 ## Experiment 3
+
 Load data for the experiment 3
+
 ```{r}
 # TODO: load data
 ```
 
 ### Cleanup
+
 ```{r}
 # clean up
 ```
 
 ### Demographics analysis
+
 ```{r}
 
 ```
 
 ### Data examination
+
 ```{r}
 
 ```
 
-### Analysis 
+### Analysis
+
 ```{r}
 
 ```

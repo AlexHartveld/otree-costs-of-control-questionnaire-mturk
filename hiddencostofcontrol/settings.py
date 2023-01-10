@@ -5,19 +5,19 @@ SESSION_CONFIGS = [
     dict(
         name='trust',
         display_name="Experiment 1: Falk & Kosfeld",
-        app_sequence=['informed_consent','demographics','instructions_trust','trust','payment_info'],
+        app_sequence=['informed_consent','demographics','instructions_trust','trust','feedback','payment_info'],
         num_demo_participants=2,
     ),
     dict(
         name="sliders",
         display_name="Experiment 2: Real Effort",
         num_demo_participants=2,
-        app_sequence=['informed_consent','demographics','instructions_sliders','sliders','payment_info']
+        app_sequence=['informed_consent','demographics','instructions_sliders','sliders','feedback','payment_info']
     ),
         dict(
         name='survey',
         display_name="Experiment 3: Questionnaire",
-        app_sequence=['survey', 'demographics', 'payment_info'], 
+        app_sequence=['survey', 'demographics', 'feedback', 'payment_info'], 
         num_demo_participants=1
     )
 ]

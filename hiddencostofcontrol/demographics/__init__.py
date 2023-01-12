@@ -22,7 +22,7 @@ class Player(BasePlayer):
         choices=['18-24', '25-34', '35-44', '45-54', '55-', 'Prefer not to say'],
     )
     gender = models.StringField(
-        choices=['Male', 'Female'],
+        choices=['Male', 'Female', 'Other', 'Prefer not to say'],
         label='What is your gender?',
         widget=widgets.RadioSelect,
     )

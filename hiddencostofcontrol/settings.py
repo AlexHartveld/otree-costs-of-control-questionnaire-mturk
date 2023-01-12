@@ -21,7 +21,7 @@ SESSION_CONFIGS = [
         num_demo_participants=1
     ),
     dict(
-        name='trust+slider',
+        name='trust_and_slider_demo',
         display_name="Experiment 1+2: Demo",
         app_sequence=['informed_consent','demographics','instructions_demo', 'trust', 'sliders','feedback','payment_info'], 
         num_demo_participants=2

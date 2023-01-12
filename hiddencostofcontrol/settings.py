@@ -65,6 +65,14 @@ ROOMS = [
         display_name='WU Vienna Experiment HCOC',
     ),
     dict(name='live_demo', display_name='Room for live demo (no participant labels)'),
+    dict(
+        name='poster_experiment1_2',
+        display_name='Poster Presentation Experiment 1 + 2'
+    ),
+    dict(
+        name='poster_experiment3',
+        display_name='Poster Presentation Experiment 3'
+    )
 ]
 
 ADMIN_USERNAME = 'admin'

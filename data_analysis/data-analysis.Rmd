@@ -1,8 +1,10 @@
 ---
 title: "Digitalization in the workplace: Hidden cost of control? - Data Analysis"
-author: Mikhail Kudimov
-date: December, 2022
-output: html_notebook
+author: "Mikhail Kudimov"
+date: "December, 2022"
+output:
+  html_document:
+    df_print: paged
 ---
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) notebook to demonstrate the data analysis process on the data obtained by the experiments within the project 'Digitalization in the workplace: Hidden cost of control?', namely 'Differences in effort provision under automated control versus human control, a replication of Falk & Kosfeld 2006 in the context of Digital Economy' academic research paper.
@@ -13,6 +15,10 @@ if (!require("tidyverse")) install.packages("tidyverse"); library("tidyverse")
 if (!require("coin")) install.packages("coin"); library("coin")
 if (!require("rstudioapi")) install.packages("rstudioapi"); library("rstudioapi")
 if (!require("SmartEDA")) install.packages("SmartEDA"); library("SmartEDA")
+if (!require("tidyr")) install.packages("tidyr"); library("tidyr")
+if (!require("psych")) install.packages("psych"); library("psych")
+if (!require("lmtest")) install.packages("lmtest"); library("lmtest")
+if (!require("car")) install.packages("car"); library("car")
 ```
 
 ## Experiment 1
@@ -46,11 +52,11 @@ ExpCatViz(trust_df)
 
 Some insight that can be drawn:
 
--   roughly equal distribution of gender data with a slight tilt towards female majority. However, no other genders are represented.
+-   female predominance in gender data.
 
--   the participants are more or less equally distributed across age groups with the exception of '45-54' one, being chosen only by 12% of respondents in comparison to 16-19% of others.
+-   the participants are more or less equally distributed across age groups with the exception of '25-34' one, being chosen by 21% of respondents in comparison to 14-17% of others.
 
--   the majority of participants has a bachelor's degree or high school or lower, with the least number of participants having a master's degree.
+-   the majority of participants has a bachelor's degree or high school or lower, with the least number of participants being in high school or lower.
 
 -   out of all, the treatment with 20 as minimum amount to be set (C20) had the smallest dispersion of values of chosen effort.
 
@@ -58,7 +64,7 @@ Let us see the how the chosen effort average is distributed along the age groups
 
 ```{r}
 df_demographics <- trust_df %>%
-  select(c(demographics.1.player.age,demographics.1.player.highest_education, demographics.1.player.gender, trust.1.group.chosen_effort))
+  select(c(demographics.1.player.age,demographics.1.player.highest_education, demographics.1.player.gender, demographics.1.player.workexperience, trust.1.group.chosen_effort))
 
 ggplot(df_demographics) + 
   geom_bar(aes(x=demographics.1.player.age, y=trust.1.group.chosen_effort, fill = as.factor(demographics.1.player.age)), 
@@ -67,7 +73,7 @@ ggplot(df_demographics) +
   theme(legend.position="none")
 ```
 
-We can notice that age group 45-54 showed below average mean choice of effort level.
+We can notice that age group 35-44 showed below average mean choice of effort level.
 
 Let's have a look at the distribution of chosen effort across highest achieved education by participant:
 
@@ -79,9 +85,9 @@ ggplot(df_demographics) +
   theme(legend.position="none")
 ```
 
-No notable differences are present here except that 'Prefer not to say' respondents had a lower chosen effort mean by a few points.
+No notable differences are present here except that 'Ph.D. or higher' respondents had a lower chosen effort mean by a few points.
 
-Analyzing the same differences per gender, not notable difference can be observed.
+Analyzing the same differences per gender, gender 'Other' shows a slightly higher chosen effort mean.
 
 ```{r}
 ggplot(df_demographics) + 
@@ -89,6 +95,37 @@ ggplot(df_demographics) +
            position = "dodge", stat = "summary", fun = "mean") +
   labs(x = "Gender", y = "Chosen effort") +
   theme(legend.position="none")
+```
+
+Next up, we can see that participants with between 1 and 2 years of work experience show most mean effort provision.
+
+```{r}
+factors_vector = c(
+  "I do not have work experience.",
+  "Less than 1 year work experience.",
+  "Between 1 and less than 2 years of work experience",
+  "Between 2 and less than 3 years work experience.",
+  "Between 3 and less than 4 years work experience.",
+  "Between 4 and less than 5 years work experience.",
+  "5 years or more work experience.",
+  "I prefer not to say."
+  )
+factors_df <- data.frame(V1=1:8, V2=factors_vector)
+
+df_demographics <- within(df_demographics, {
+  f <- factor(df_demographics$demographics.1.player.workexperience, levels=factors_df$V1, labels=factors_df$V2)
+  demographics.1.player.workexperience <- as.character(f)
+  })
+
+df_demographics$demographics.1.player.workexperience <- as.character(df_demographics$demographics.1.player.workexperience)
+df_demographics$demographics.1.player.workexperience <- ordered(df_demographics$demographics.1.player.workexperience, levels = factors_vector)
+
+ggplot(df_demographics) + 
+  geom_bar(aes(x=demographics.1.player.workexperience, y=trust.1.group.chosen_effort, fill = as.factor(demographics.1.player.workexperience)), 
+           position = "dodge", stat = "summary", fun = "mean") +
+  labs(x = "Work experience", y = "Chosen effort") +
+  theme(legend.position="none") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
 ### Prepare data
@@ -133,13 +170,13 @@ trust_c5 <- trust_c5 %>%
 
 test1_c5 <- data.frame(
   effort = c(trust_c5$trust.1.group.chosen_effort_min5, trust_c5$trust.1.group.chosen_effort_modified), 
-  group = factor(rep(c("control", "no control"), c(16, 16)))
+  group = factor(rep(c("control", "no control"), c(nrow(trust_c5), nrow(trust_c5))))
 )
 
 wilcox.test(trust_c5$trust.1.group.chosen_effort_min5, trust_c5$trust.1.group.chosen_effort_modified, data = test1_c5, paired = T, exact = F)
 ```
 
-As we can see, the p-value `0.007467` , well below the chosen significance level of `0.5` , meaning that these groups do indeed differ.
+As we can see, the p-value `2.881e-06` , well below the chosen significance level of `0.5` , meaning that these groups do indeed differ.
 
 Let's look at the means of groups.
 
@@ -158,7 +195,7 @@ trust_c10 <- trust_c10 %>%
 
 test1_c10 <- data.frame(
   effort = c(trust_c10$trust.1.group.chosen_effort_min10, trust_c10$trust.1.group.chosen_effort_modified), 
-  group = factor(rep(c("control", "no control"), c(17, 17)))
+  group = factor(rep(c("control", "no control"), c(nrow(trust_c10), nrow(trust_c10))))
 )
 
 wilcox.test(trust_c10$trust.1.group.chosen_effort_min10, trust_c10$trust.1.group.chosen_effort_modified, data = test1_c10, paired = T, exact = F)
@@ -181,7 +218,7 @@ trust_c20 <- trust_c20 %>%
 
 test1_c20 <- data.frame(
   effort = c(trust_c20$trust.1.group.chosen_effort_min20, trust_c20$trust.1.group.chosen_effort_modified), 
-  group = factor(rep(c("control", "no control"), c(17, 17)))
+  group = factor(rep(c("control", "no control"), c(nrow(trust_c20), nrow(trust_c20))))
 )
 
 wilcox.test(trust_c20$trust.1.group.chosen_effort_min20, trust_c20$trust.1.group.chosen_effort_modified, data = test1_c20, paired = T, exact = F)
@@ -211,7 +248,7 @@ wilcox.test(trust_c20$trust.1.group.chosen_effort_min20, trust_c20$trust.1.group
 
 All tests show significant difference, meaning that in all treatments more effort is provided in case the principal trusts.
 
-Indeed, looking at means and medians of these groups, in all treatments the no control decision yeilds greater effort.
+Indeed, looking at means and medians of these groups, in all treatments the no control decision yields greater effort.
 
 ```{r}
 mean(trust_c5$trust.1.group.chosen_effort_min5)
@@ -253,68 +290,790 @@ sum(trust_c20$trust.1.group.chosen_effort == trust_c20$trust.1.group.chosen_effo
 sum(trust_c20$trust.1.group.chosen_effort < trust_c20$trust.1.group.chosen_effort_min20, na.rm=TRUE)/nrow(trust_c20)
 ```
 
-As depicted, the group of agent reacting negatively to control is the dominant one in all three treatments (69%, 94% and 65%). It is they, who are responsible for the existence of hidden costs of control, and because of them, on average, it does not pay off for the principle to control their agent.
+As depicted, the group of agent reacting negatively to control is the dominant one in all three treatments (88%, 82% and 67%). It is they, who are responsible for the existence of hidden costs of control, and because of them, on average, it does not pay off for the principle to control their agent.
 
 ## Experiment 2
 
 Load data for the experiment 2
 
 ```{r}
-# TODO: load data
+sliders_df <- read.csv("data/sliders.csv")
 ```
 
-### Cleanup
+### Describe data
 
 ```{r}
-# clean up
+ExpData(sliders_df, type = 1)
 ```
-
-### Demographics analysis
 
 ```{r}
+ExpData(sliders_df, type = 2)
 
+ExpNumStat(sliders_df, gp = "sliders.1.group.minimum_amount", Outlier = TRUE, round = 2)
 ```
 
-### Data examination
+### Explore data
 
 ```{r}
-
+ExpCatViz(sliders_df)
 ```
+
+Some insight that can be drawn:
+
+-   male predominance in gender data.
+
+-   the majority of respondents are of either 25-34 or 45-54 age (22 and 20%) in comparison to 12-15% of other age groups.
+
+-   the majority of participants have finished trade school.
+
+Let us see the how the chosen effort average is distributed along the age groups:
+
+```{r}
+df_demographics_sliders <- sliders_df %>%
+  select(c(demographics.1.player.age,demographics.1.player.highest_education, demographics.1.player.gender, demographics.1.player.workexperience, sliders.1.group.chosen_effort))
+
+ggplot(df_demographics_sliders) + 
+  geom_bar(aes(x=demographics.1.player.age, y=sliders.1.group.chosen_effort, fill = as.factor(demographics.1.player.age)), 
+           position = "dodge", stat = "summary", fun = "mean") +
+  labs(x = "Age", y = "Chosen effort") +
+  theme(legend.position="none")
+```
+
+We can notice that age group 25-34 showed below average mean choice of effort level.
+
+Let's have a look at the distribution of chosen effort across highest achieved education by participant:
+
+```{r}
+ggplot(df_demographics_sliders) + 
+  geom_bar(aes(x=demographics.1.player.highest_education, y=sliders.1.group.chosen_effort, fill = as.factor(demographics.1.player.highest_education)), 
+           position = "dodge", stat = "summary", fun = "mean") +
+  labs(x = "Highest education", y = "Chosen effort") +
+  theme(legend.position="none")
+```
+
+No notable differences are present here except that 'Ph.D. or higher' respondents had a lower chosen effort mean by a few points.
+
+Analyzing the same differences per gender, males show a slightly higher chosen effort mean.
+
+```{r}
+ggplot(df_demographics_sliders) + 
+  geom_bar(aes(x=demographics.1.player.gender, y=sliders.1.group.chosen_effort, fill = as.factor(demographics.1.player.gender)), 
+           position = "dodge", stat = "summary", fun = "mean") +
+  labs(x = "Gender", y = "Chosen effort") +
+  theme(legend.position="none")
+```
+
+Next up, we can see that participants with 5 or more years of work experience show most mean effort provision.
+
+```{r}
+factors_vector_sliders = c(
+  "I do not have work experience.",
+  "Less than 1 year work experience.",
+  "Between 1 and less than 2 years of work experience",
+  "Between 2 and less than 3 years work experience.",
+  "Between 3 and less than 4 years work experience.",
+  "Between 4 and less than 5 years work experience.",
+  "5 years or more work experience.",
+  "I prefer not to say."
+  )
+factors_df_sliders <- data.frame(V1=1:8, V2=factors_vector_sliders)
+
+df_demographics_sliders <- within(df_demographics_sliders, {
+  f <- factor(df_demographics_sliders$demographics.1.player.workexperience, levels=factors_df_sliders$V1, labels=factors_df_sliders$V2)
+  demographics.1.player.workexperience <- as.character(f)
+  })
+
+df_demographics_sliders$demographics.1.player.workexperience <- as.character(df_demographics_sliders$demographics.1.player.workexperience)
+df_demographics_sliders$demographics.1.player.workexperience <- ordered(df_demographics_sliders$demographics.1.player.workexperience, levels = factors_vector_sliders)
+
+ggplot(df_demographics_sliders) + 
+  geom_bar(aes(x=demographics.1.player.workexperience, y=sliders.1.group.chosen_effort, fill = as.factor(demographics.1.player.workexperience)), 
+           position = "dodge", stat = "summary", fun = "mean") +
+  labs(x = "Work experience", y = "Chosen effort") +
+  theme(legend.position="none") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+### Prepare data
+
+Since the participants are split into principal/agent pairs, the dataset contains information about experiment values (chosen effort if not controlled, effort if controlled) in both rows - for the principal and the agent, essentially duplicating these data.
+
+```{r}
+head(sliders_df)
+```
+
+Let us then have only agent rows in a separate dataframe
+
+```{r}
+sliders_df_agent <- sliders_df %>%
+  filter(participant.id_in_session %% 2 == 0)
+```
+
+Apart from that, let's separate each treatment into a dataframe for convenience
+
+```{r}
+sliders_c5 <- sliders_df_agent %>%
+  filter(sliders.1.player.control == 5)
+sliders_c5_trust <- sliders_c5 %>%
+  filter(sliders.1.group.minimum_amount == "No")
+sliders_c5_control <- sliders_c5 %>%
+  filter(sliders.1.group.minimum_amount == "Yes")
+
+sliders_c10 <- sliders_df_agent %>%
+  filter(sliders.1.player.control == 10)
+sliders_c10_trust <- sliders_c10 %>%
+  filter(sliders.1.group.minimum_amount == "No")
+sliders_c10_control <- sliders_c10 %>%
+  filter(sliders.1.group.minimum_amount == "Yes")
+
+sliders_c20 <- sliders_df_agent %>%
+  filter(sliders.1.player.control == 20)
+sliders_c20_trust <- sliders_c20 %>%
+  filter(sliders.1.group.minimum_amount == "No")
+sliders_c20_control <- sliders_c20 %>%
+  filter(sliders.1.group.minimum_amount == "Yes")
+```
+
+Thus, in each dataframe, `sliders.1.group.chosen_effort` is the number of sliders done.
 
 ### Analysis
 
-```{r}
+In this section we will be aiming to conduct several tests to understand if hidden costs of control are present in the results of the this experiment. The significance level $\alpha$ here and further on is chosen to be 5%.
 
+Firstly, we will test if there is difference in effort provision in cases of controlling and not controlling, with the null hypothesis being that the groups are the same. This will be done by modifying chosen effort in no control scenario to always be above minimum amount (setting all those that are lower to a minimum amount).
+
+```{r}
+sliders_c5_trust <- sliders_c5_trust %>%
+  mutate(sliders.1.group.chosen_effort_modified = ifelse(sliders.1.group.chosen_effort < 5, 5, sliders.1.group.chosen_effort))
+
+wilcox.test(sliders_c5_trust$sliders.1.group.chosen_effort_modified, sliders_c5_control$sliders.1.group.chosen_effort, exact = F)
+```
+
+As we can see, the p-value `1.321e-06`, well below the chosen significance level of `0.5` , meaning that these groups do indeed differ.
+
+Let's look at the means of groups.
+
+```{r}
+mean(sliders_c5_control$sliders.1.group.chosen_effort)
+mean(sliders_c5_trust$sliders.1.group.chosen_effort)
+```
+
+We can see that, as expected, mean effort provision with no control is higher.
+
+Let's test the same hypothesis for C10 treatment:
+
+```{r}
+sliders_c10_trust <- sliders_c10_trust %>%
+  mutate(sliders.1.group.chosen_effort_modified = ifelse(sliders.1.group.chosen_effort < 10, 10, sliders.1.group.chosen_effort))
+
+wilcox.test(sliders_c10_trust$sliders.1.group.chosen_effort_modified, sliders_c10_control$sliders.1.group.chosen_effort, exact = F)
+```
+
+Again, the null hypothesis is rejected.
+
+Having look at the means, no control has greater mean effort provision.
+
+```{r}
+mean(sliders_c10_control$sliders.1.group.chosen_effort)
+mean(sliders_c10_trust$sliders.1.group.chosen_effort_modified)
+```
+
+Finally, test C20 treatment.
+
+```{r}
+sliders_c20_trust <- sliders_c20_trust %>%
+  mutate(sliders.1.group.chosen_effort_modified = ifelse(sliders.1.group.chosen_effort < 20, 20, sliders.1.group.chosen_effort))
+
+wilcox.test(sliders_c20_trust$sliders.1.group.chosen_effort_modified, sliders_c20_control$sliders.1.group.chosen_effort, exact = F)
+```
+
+Again, we reject the null hypothesis.
+
+The mean of effort provision is again greater for no control.
+
+```{r}
+mean(sliders_c20_control$sliders.1.group.chosen_effort)
+mean(sliders_c20_trust$sliders.1.group.chosen_effort_modified)
+```
+
+Now, let us conduct the second test for these treatments. We will be testing if the hidden costs of control outweigh the benefits. That is, if effort provision is greater for no control situations even if no adjustment with setting values lesser than minimum amount to minimum amount is implemented.
+
+```{r}
+# C5
+wilcox.test(sliders_c5_control$sliders.1.group.chosen_effort, sliders_c5_trust$sliders.1.group.chosen_effort, exact = F)
+
+# C10
+wilcox.test(sliders_c10_control$sliders.1.group.chosen_effort, sliders_c10_trust$sliders.1.group.chosen_effort, exact = F)
+
+# C20
+wilcox.test(sliders_c20_control$sliders.1.group.chosen_effort, sliders_c20_trust$sliders.1.group.chosen_effort, exact = F)
+```
+
+Tests for C5 and C10 treatment show significant difference, meaning that more effort is provided in case the principal trusts. For C20, more effort is provided in case the principal trusts (depicted below), yet the difference is insignificant.
+
+Indeed, looking at means and medians of these groups, the no control decision yields greater effort for treatments C5 and C20.
+
+```{r}
+mean(sliders_c5_control$sliders.1.group.chosen_effort)
+mean(sliders_c5_trust$sliders.1.group.chosen_effort)
+median(sliders_c5_control$sliders.1.group.chosen_effort)
+median(sliders_c5_trust$sliders.1.group.chosen_effort)
+
+mean(sliders_c10_control$sliders.1.group.chosen_effort)
+mean(sliders_c10_trust$sliders.1.group.chosen_effort)
+median(sliders_c10_control$sliders.1.group.chosen_effort)
+median(sliders_c10_trust$sliders.1.group.chosen_effort)
+
+mean(sliders_c20_control$sliders.1.group.chosen_effort)
+mean(sliders_c20_trust$sliders.1.group.chosen_effort)
+median(sliders_c20_control$sliders.1.group.chosen_effort)
+median(sliders_c20_trust$sliders.1.group.chosen_effort)
 ```
 
 ## Experiment 3
 
-Load data for the experiment 3
-
 ```{r}
-# TODO: load data
+survey_df <- read.csv("data/survey.csv")
 ```
 
-### Cleanup
+### Describe data
 
 ```{r}
-# clean up
+ExpData(survey_df, type = 1)
 ```
 
-### Demographics analysis
+```{r}
+ExpData(survey_df, type = 2)
+
+ExpNumStat(survey_df, Outlier = TRUE, round = 2)
+```
+
+### Clean data
+
+Roughly half of the rows in the dataset is related to participants who have not started the survey, thus:
 
 ```{r}
+survey_df <- survey_df %>%
+  filter(participant.visited == 1)
+```
+
+### Explore data
+
+```{r}
+ExpCatViz(survey_df)
+```
+
+Some insight that can be drawn:
+
+-   female predominance in gender data.
+
+-   the majority of participants is in the second youngest age group: 25-34. Also, no one is aged 18-24.
+
+-   the majority of participants has a bachelor's degree (41%) with a high school or lower on the second place (30%).
+
+-   the majority of participants had between 3 and 4 years of work experience.
+
+### Prepare data
+
+Let us reform the data by placing all trust, control, autocontrol and monitoring responses in respective vectors for statistical testing.
+
+```{r}
+trust <- c()
+trust <- c(trust, survey_df$survey.1.player.item1trust[!is.na(survey_df$survey.1.player.item1trust)])
+trust <- c(trust, survey_df$survey.1.player.item2trust[!is.na(survey_df$survey.1.player.item2trust)])
+trust <- c(trust, survey_df$survey.1.player.item3trust[!is.na(survey_df$survey.1.player.item3trust)])
+trust <- c(trust, survey_df$survey.1.player.item4trust[!is.na(survey_df$survey.1.player.item4trust)])
+trust <- c(trust, survey_df$survey.1.player.item5trust[!is.na(survey_df$survey.1.player.item5trust)])
+trust <- c(trust, survey_df$survey.2.player.item1trust[!is.na(survey_df$survey.2.player.item1trust)])
+trust <- c(trust, survey_df$survey.2.player.item2trust[!is.na(survey_df$survey.2.player.item2trust)])
+trust <- c(trust, survey_df$survey.2.player.item3trust[!is.na(survey_df$survey.2.player.item3trust)])
+trust <- c(trust, survey_df$survey.2.player.item4trust[!is.na(survey_df$survey.2.player.item4trust)])
+trust <- c(trust, survey_df$survey.2.player.item5trust[!is.na(survey_df$survey.2.player.item5trust)])
+trust <- c(trust, survey_df$survey.3.player.item1trust[!is.na(survey_df$survey.3.player.item1trust)])
+trust <- c(trust, survey_df$survey.3.player.item2trust[!is.na(survey_df$survey.3.player.item2trust)])
+trust <- c(trust, survey_df$survey.3.player.item3trust[!is.na(survey_df$survey.3.player.item3trust)])
+trust <- c(trust, survey_df$survey.3.player.item4trust[!is.na(survey_df$survey.3.player.item4trust)])
+trust <- c(trust, survey_df$survey.3.player.item5trust[!is.na(survey_df$survey.3.player.item5trust)])
+trust <- c(trust, survey_df$survey.4.player.item1trust[!is.na(survey_df$survey.4.player.item1trust)])
+trust <- c(trust, survey_df$survey.4.player.item2trust[!is.na(survey_df$survey.4.player.item2trust)])
+trust <- c(trust, survey_df$survey.4.player.item3trust[!is.na(survey_df$survey.4.player.item3trust)])
+trust <- c(trust, survey_df$survey.4.player.item4trust[!is.na(survey_df$survey.4.player.item4trust)])
+trust <- c(trust, survey_df$survey.4.player.item5trust[!is.na(survey_df$survey.4.player.item5trust)])
+trust <- c(trust, survey_df$survey.5.player.item1trust[!is.na(survey_df$survey.5.player.item1trust)])
+trust <- c(trust, survey_df$survey.5.player.item2trust[!is.na(survey_df$survey.5.player.item2trust)])
+trust <- c(trust, survey_df$survey.5.player.item3trust[!is.na(survey_df$survey.5.player.item3trust)])
+trust <- c(trust, survey_df$survey.5.player.item4trust[!is.na(survey_df$survey.5.player.item4trust)])
+trust <- c(trust, survey_df$survey.5.player.item5trust[!is.na(survey_df$survey.5.player.item5trust)])
 
 ```
 
-### Data examination
+```{r}
+control <- c()
+control <- c(control, survey_df$survey.1.player.item1control[!is.na(survey_df$survey.1.player.item1control)])
+control <- c(control, survey_df$survey.1.player.item2control[!is.na(survey_df$survey.1.player.item2control)])
+control <- c(control, survey_df$survey.1.player.item3control[!is.na(survey_df$survey.1.player.item3control)])
+control <- c(control, survey_df$survey.1.player.item4control[!is.na(survey_df$survey.1.player.item4control)])
+control <- c(control, survey_df$survey.1.player.item5control[!is.na(survey_df$survey.1.player.item5control)])
+control <- c(control, survey_df$survey.2.player.item1control[!is.na(survey_df$survey.2.player.item1control)])
+control <- c(control, survey_df$survey.2.player.item2control[!is.na(survey_df$survey.2.player.item2control)])
+control <- c(control, survey_df$survey.2.player.item3control[!is.na(survey_df$survey.2.player.item3control)])
+control <- c(control, survey_df$survey.2.player.item4control[!is.na(survey_df$survey.2.player.item4control)])
+control <- c(control, survey_df$survey.2.player.item5control[!is.na(survey_df$survey.2.player.item5control)])
+control <- c(control, survey_df$survey.3.player.item1control[!is.na(survey_df$survey.3.player.item1control)])
+control <- c(control, survey_df$survey.3.player.item2control[!is.na(survey_df$survey.3.player.item2control)])
+control <- c(control, survey_df$survey.3.player.item3control[!is.na(survey_df$survey.3.player.item3control)])
+control <- c(control, survey_df$survey.3.player.item4control[!is.na(survey_df$survey.3.player.item4control)])
+control <- c(control, survey_df$survey.3.player.item5control[!is.na(survey_df$survey.3.player.item5control)])
+control <- c(control, survey_df$survey.4.player.item1control[!is.na(survey_df$survey.4.player.item1control)])
+control <- c(control, survey_df$survey.4.player.item2control[!is.na(survey_df$survey.4.player.item2control)])
+control <- c(control, survey_df$survey.4.player.item3control[!is.na(survey_df$survey.4.player.item3control)])
+control <- c(control, survey_df$survey.4.player.item4control[!is.na(survey_df$survey.4.player.item4control)])
+control <- c(control, survey_df$survey.4.player.item5control[!is.na(survey_df$survey.4.player.item5control)])
+control <- c(control, survey_df$survey.5.player.item1control[!is.na(survey_df$survey.5.player.item1control)])
+control <- c(control, survey_df$survey.5.player.item2control[!is.na(survey_df$survey.5.player.item2control)])
+control <- c(control, survey_df$survey.5.player.item3control[!is.na(survey_df$survey.5.player.item3control)])
+control <- c(control, survey_df$survey.5.player.item4control[!is.na(survey_df$survey.5.player.item4control)])
+control <- c(control, survey_df$survey.5.player.item5control[!is.na(survey_df$survey.5.player.item5control)])
+
+```
 
 ```{r}
+autocontrol <- c()
+autocontrol <- c(autocontrol, survey_df$survey.1.player.item1autocontrol[!is.na(survey_df$survey.1.player.item1autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.1.player.item2autocontrol[!is.na(survey_df$survey.1.player.item2autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.1.player.item3autocontrol[!is.na(survey_df$survey.1.player.item3autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.1.player.item4autocontrol[!is.na(survey_df$survey.1.player.item4autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.1.player.item5autocontrol[!is.na(survey_df$survey.1.player.item5autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.2.player.item1autocontrol[!is.na(survey_df$survey.2.player.item1autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.2.player.item2autocontrol[!is.na(survey_df$survey.2.player.item2autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.2.player.item3autocontrol[!is.na(survey_df$survey.2.player.item3autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.2.player.item4autocontrol[!is.na(survey_df$survey.2.player.item4autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.2.player.item5autocontrol[!is.na(survey_df$survey.2.player.item5autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.3.player.item1autocontrol[!is.na(survey_df$survey.3.player.item1autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.3.player.item2autocontrol[!is.na(survey_df$survey.3.player.item2autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.3.player.item3autocontrol[!is.na(survey_df$survey.3.player.item3autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.3.player.item4autocontrol[!is.na(survey_df$survey.3.player.item4autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.3.player.item5autocontrol[!is.na(survey_df$survey.3.player.item5autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.4.player.item1autocontrol[!is.na(survey_df$survey.4.player.item1autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.4.player.item2autocontrol[!is.na(survey_df$survey.4.player.item2autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.4.player.item3autocontrol[!is.na(survey_df$survey.4.player.item3autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.4.player.item4autocontrol[!is.na(survey_df$survey.4.player.item4autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.4.player.item5autocontrol[!is.na(survey_df$survey.4.player.item5autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.5.player.item1autocontrol[!is.na(survey_df$survey.5.player.item1autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.5.player.item2autocontrol[!is.na(survey_df$survey.5.player.item2autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.5.player.item3autocontrol[!is.na(survey_df$survey.5.player.item3autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.5.player.item4autocontrol[!is.na(survey_df$survey.5.player.item4autocontrol)])
+autocontrol <- c(autocontrol, survey_df$survey.5.player.item5autocontrol[!is.na(survey_df$survey.5.player.item5autocontrol)])
 
+```
+
+```{r}
+monitoring <- c()
+monitoring <- c(monitoring, survey_df$survey.1.player.item1monitoring[!is.na(survey_df$survey.1.player.item1monitoring)])
+monitoring <- c(monitoring, survey_df$survey.1.player.item2monitoring[!is.na(survey_df$survey.1.player.item2monitoring)])
+monitoring <- c(monitoring, survey_df$survey.1.player.item3monitoring[!is.na(survey_df$survey.1.player.item3monitoring)])
+monitoring <- c(monitoring, survey_df$survey.1.player.item4monitoring[!is.na(survey_df$survey.1.player.item4monitoring)])
+monitoring <- c(monitoring, survey_df$survey.1.player.item5monitoring[!is.na(survey_df$survey.1.player.item5monitoring)])
+monitoring <- c(monitoring, survey_df$survey.2.player.item1monitoring[!is.na(survey_df$survey.2.player.item1monitoring)])
+monitoring <- c(monitoring, survey_df$survey.2.player.item2monitoring[!is.na(survey_df$survey.2.player.item2monitoring)])
+monitoring <- c(monitoring, survey_df$survey.2.player.item3monitoring[!is.na(survey_df$survey.2.player.item3monitoring)])
+monitoring <- c(monitoring, survey_df$survey.2.player.item4monitoring[!is.na(survey_df$survey.2.player.item4monitoring)])
+monitoring <- c(monitoring, survey_df$survey.2.player.item5monitoring[!is.na(survey_df$survey.2.player.item5monitoring)])
+monitoring <- c(monitoring, survey_df$survey.3.player.item1monitoring[!is.na(survey_df$survey.3.player.item1monitoring)])
+monitoring <- c(monitoring, survey_df$survey.3.player.item2monitoring[!is.na(survey_df$survey.3.player.item2monitoring)])
+monitoring <- c(monitoring, survey_df$survey.3.player.item3monitoring[!is.na(survey_df$survey.3.player.item3monitoring)])
+monitoring <- c(monitoring, survey_df$survey.3.player.item4monitoring[!is.na(survey_df$survey.3.player.item4monitoring)])
+monitoring <- c(monitoring, survey_df$survey.3.player.item5monitoring[!is.na(survey_df$survey.3.player.item5monitoring)])
+monitoring <- c(monitoring, survey_df$survey.4.player.item1monitoring[!is.na(survey_df$survey.4.player.item1monitoring)])
+monitoring <- c(monitoring, survey_df$survey.4.player.item2monitoring[!is.na(survey_df$survey.4.player.item2monitoring)])
+monitoring <- c(monitoring, survey_df$survey.4.player.item3monitoring[!is.na(survey_df$survey.4.player.item3monitoring)])
+monitoring <- c(monitoring, survey_df$survey.4.player.item4monitoring[!is.na(survey_df$survey.4.player.item4monitoring)])
+monitoring <- c(monitoring, survey_df$survey.4.player.item5monitoring[!is.na(survey_df$survey.4.player.item5monitoring)])
+monitoring <- c(monitoring, survey_df$survey.5.player.item1monitoring[!is.na(survey_df$survey.5.player.item1monitoring)])
+monitoring <- c(monitoring, survey_df$survey.5.player.item2monitoring[!is.na(survey_df$survey.5.player.item2monitoring)])
+monitoring <- c(monitoring, survey_df$survey.5.player.item3monitoring[!is.na(survey_df$survey.5.player.item3monitoring)])
+monitoring <- c(monitoring, survey_df$survey.5.player.item4monitoring[!is.na(survey_df$survey.5.player.item4monitoring)])
+monitoring <- c(monitoring, survey_df$survey.5.player.item5monitoring[!is.na(survey_df$survey.5.player.item5monitoring)])
+```
+
+After having a look at the data, namely the 'feedback' field, we see a trend of using 'GOOD' and 'good' responses, which may indicate some bot presence among the mTurk workers. At this stage, there is no definitive way to tell whether this assumption is true or false, thus the statistical tests will be ran on both filtered and unfiltered samples.
+
+```{r}
+survey_df_filtered <- survey_df %>% filter(feedback.1.player.feedback_text != "GOOD" & feedback.1.player.feedback_text != "good")
+
+trust_filtered <-c()
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.1.player.item1trust[!is.na(survey_df_filtered$survey.1.player.item1trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.1.player.item2trust[!is.na(survey_df_filtered$survey.1.player.item2trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.1.player.item3trust[!is.na(survey_df_filtered$survey.1.player.item3trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.1.player.item4trust[!is.na(survey_df_filtered$survey.1.player.item4trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.1.player.item5trust[!is.na(survey_df_filtered$survey.1.player.item5trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.2.player.item1trust[!is.na(survey_df_filtered$survey.2.player.item1trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.2.player.item2trust[!is.na(survey_df_filtered$survey.2.player.item2trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.2.player.item3trust[!is.na(survey_df_filtered$survey.2.player.item3trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.2.player.item4trust[!is.na(survey_df_filtered$survey.2.player.item4trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.2.player.item5trust[!is.na(survey_df_filtered$survey.2.player.item5trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.3.player.item1trust[!is.na(survey_df_filtered$survey.3.player.item1trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.3.player.item2trust[!is.na(survey_df_filtered$survey.3.player.item2trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.3.player.item3trust[!is.na(survey_df_filtered$survey.3.player.item3trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.3.player.item4trust[!is.na(survey_df_filtered$survey.3.player.item4trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.3.player.item5trust[!is.na(survey_df_filtered$survey.3.player.item5trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.4.player.item1trust[!is.na(survey_df_filtered$survey.4.player.item1trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.4.player.item2trust[!is.na(survey_df_filtered$survey.4.player.item2trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.4.player.item3trust[!is.na(survey_df_filtered$survey.4.player.item3trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.4.player.item4trust[!is.na(survey_df_filtered$survey.4.player.item4trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.4.player.item5trust[!is.na(survey_df_filtered$survey.4.player.item5trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.5.player.item1trust[!is.na(survey_df_filtered$survey.5.player.item1trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.5.player.item2trust[!is.na(survey_df_filtered$survey.5.player.item2trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.5.player.item3trust[!is.na(survey_df_filtered$survey.5.player.item3trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.5.player.item4trust[!is.na(survey_df_filtered$survey.5.player.item4trust)])
+trust_filtered <-c(trust_filtered, survey_df_filtered$survey.5.player.item5trust[!is.na(survey_df_filtered$survey.5.player.item5trust)])
+
+control_filtered <- c()
+control_filtered <- c(control_filtered, survey_df_filtered$survey.1.player.item1control[!is.na(survey_df_filtered$survey.1.player.item1control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.1.player.item2control[!is.na(survey_df_filtered$survey.1.player.item2control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.1.player.item3control[!is.na(survey_df_filtered$survey.1.player.item3control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.1.player.item4control[!is.na(survey_df_filtered$survey.1.player.item4control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.1.player.item5control[!is.na(survey_df_filtered$survey.1.player.item5control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.2.player.item1control[!is.na(survey_df_filtered$survey.2.player.item1control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.2.player.item2control[!is.na(survey_df_filtered$survey.2.player.item2control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.2.player.item3control[!is.na(survey_df_filtered$survey.2.player.item3control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.2.player.item4control[!is.na(survey_df_filtered$survey.2.player.item4control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.2.player.item5control[!is.na(survey_df_filtered$survey.2.player.item5control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.3.player.item1control[!is.na(survey_df_filtered$survey.3.player.item1control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.3.player.item2control[!is.na(survey_df_filtered$survey.3.player.item2control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.3.player.item3control[!is.na(survey_df_filtered$survey.3.player.item3control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.3.player.item4control[!is.na(survey_df_filtered$survey.3.player.item4control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.3.player.item5control[!is.na(survey_df_filtered$survey.3.player.item5control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.4.player.item1control[!is.na(survey_df_filtered$survey.4.player.item1control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.4.player.item2control[!is.na(survey_df_filtered$survey.4.player.item2control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.4.player.item3control[!is.na(survey_df_filtered$survey.4.player.item3control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.4.player.item4control[!is.na(survey_df_filtered$survey.4.player.item4control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.4.player.item5control[!is.na(survey_df_filtered$survey.4.player.item5control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.5.player.item1control[!is.na(survey_df_filtered$survey.5.player.item1control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.5.player.item2control[!is.na(survey_df_filtered$survey.5.player.item2control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.5.player.item3control[!is.na(survey_df_filtered$survey.5.player.item3control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.5.player.item4control[!is.na(survey_df_filtered$survey.5.player.item4control)])
+control_filtered <- c(control_filtered, survey_df_filtered$survey.5.player.item5control[!is.na(survey_df_filtered$survey.5.player.item5control)])
+
+autocontrol_filtered <- c()
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.1.player.item1autocontrol[!is.na(survey_df_filtered$survey.1.player.item1autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.1.player.item2autocontrol[!is.na(survey_df_filtered$survey.1.player.item2autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.1.player.item3autocontrol[!is.na(survey_df_filtered$survey.1.player.item3autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.1.player.item4autocontrol[!is.na(survey_df_filtered$survey.1.player.item4autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.1.player.item5autocontrol[!is.na(survey_df_filtered$survey.1.player.item5autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.2.player.item1autocontrol[!is.na(survey_df_filtered$survey.2.player.item1autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.2.player.item2autocontrol[!is.na(survey_df_filtered$survey.2.player.item2autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.2.player.item3autocontrol[!is.na(survey_df_filtered$survey.2.player.item3autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.2.player.item4autocontrol[!is.na(survey_df_filtered$survey.2.player.item4autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.2.player.item5autocontrol[!is.na(survey_df_filtered$survey.2.player.item5autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.3.player.item1autocontrol[!is.na(survey_df_filtered$survey.3.player.item1autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.3.player.item2autocontrol[!is.na(survey_df_filtered$survey.3.player.item2autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.3.player.item3autocontrol[!is.na(survey_df_filtered$survey.3.player.item3autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.3.player.item4autocontrol[!is.na(survey_df_filtered$survey.3.player.item4autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.3.player.item5autocontrol[!is.na(survey_df_filtered$survey.3.player.item5autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.4.player.item1autocontrol[!is.na(survey_df_filtered$survey.4.player.item1autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.4.player.item2autocontrol[!is.na(survey_df_filtered$survey.4.player.item2autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.4.player.item3autocontrol[!is.na(survey_df_filtered$survey.4.player.item3autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.4.player.item4autocontrol[!is.na(survey_df_filtered$survey.4.player.item4autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.4.player.item5autocontrol[!is.na(survey_df_filtered$survey.4.player.item5autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.5.player.item1autocontrol[!is.na(survey_df_filtered$survey.5.player.item1autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.5.player.item2autocontrol[!is.na(survey_df_filtered$survey.5.player.item2autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.5.player.item3autocontrol[!is.na(survey_df_filtered$survey.5.player.item3autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.5.player.item4autocontrol[!is.na(survey_df_filtered$survey.5.player.item4autocontrol)])
+autocontrol_filtered <- c(autocontrol_filtered, survey_df_filtered$survey.5.player.item5autocontrol[!is.na(survey_df_filtered$survey.5.player.item5autocontrol)])
+
+monitoring_filtered <- c()
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.1.player.item1monitoring[!is.na(survey_df_filtered$survey.1.player.item1monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.1.player.item2monitoring[!is.na(survey_df_filtered$survey.1.player.item2monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.1.player.item3monitoring[!is.na(survey_df_filtered$survey.1.player.item3monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.1.player.item4monitoring[!is.na(survey_df_filtered$survey.1.player.item4monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.1.player.item5monitoring[!is.na(survey_df_filtered$survey.1.player.item5monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.2.player.item1monitoring[!is.na(survey_df_filtered$survey.2.player.item1monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.2.player.item2monitoring[!is.na(survey_df_filtered$survey.2.player.item2monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.2.player.item3monitoring[!is.na(survey_df_filtered$survey.2.player.item3monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.2.player.item4monitoring[!is.na(survey_df_filtered$survey.2.player.item4monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.2.player.item5monitoring[!is.na(survey_df_filtered$survey.2.player.item5monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.3.player.item1monitoring[!is.na(survey_df_filtered$survey.3.player.item1monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.3.player.item2monitoring[!is.na(survey_df_filtered$survey.3.player.item2monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.3.player.item3monitoring[!is.na(survey_df_filtered$survey.3.player.item3monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.3.player.item4monitoring[!is.na(survey_df_filtered$survey.3.player.item4monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.3.player.item5monitoring[!is.na(survey_df_filtered$survey.3.player.item5monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.4.player.item1monitoring[!is.na(survey_df_filtered$survey.4.player.item1monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.4.player.item2monitoring[!is.na(survey_df_filtered$survey.4.player.item2monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.4.player.item3monitoring[!is.na(survey_df_filtered$survey.4.player.item3monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.4.player.item4monitoring[!is.na(survey_df_filtered$survey.4.player.item4monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.4.player.item5monitoring[!is.na(survey_df_filtered$survey.4.player.item5monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.5.player.item1monitoring[!is.na(survey_df_filtered$survey.5.player.item1monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.5.player.item2monitoring[!is.na(survey_df_filtered$survey.5.player.item2monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.5.player.item3monitoring[!is.na(survey_df_filtered$survey.5.player.item3monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.5.player.item4monitoring[!is.na(survey_df_filtered$survey.5.player.item4monitoring)])
+monitoring_filtered <- c(monitoring_filtered, survey_df_filtered$survey.5.player.item5monitoring[!is.na(survey_df_filtered$survey.5.player.item5monitoring)])
 ```
 
 ### Analysis
 
-```{r}
+Let us first look at the means per each control type.
 
+```{r}
+mean(control)
+mean(trust)
+mean(autocontrol)
+mean(monitoring)
 ```
+
+Interestingly, the mean of 'trust' is not the highest -- 'control's is. Thus, not surprisingly, we fail to reject the hypothesis that trust provides higher motivation than any other control type:
+
+```{r}
+any_control <- c(control, autocontrol, monitoring)
+wilcox.test(trust, any_control, paired = F, exact = F)
+```
+
+Even if we look at control types with the most different means, we do not see any significant difference.
+
+```{r}
+wilcox.test(control, autocontrol, paired = F, exact = F)
+```
+
+And, if we conduct a Kruskall-Wallis test to assess differences between all control types
+
+```{r}
+kruskal.test(list(control, trust, autocontrol, monitoring))
+```
+
+It yields not significant results.
+
+Let us then have a look at the data with 'bots' filtered out.
+
+```{r}
+mean(control_filtered)
+mean(trust_filtered)
+mean(autocontrol_filtered)
+mean(monitoring_filtered)
+```
+
+The means, as before, are somewhat different, yet, comparing trust to other types of control fails us to reject null hypothesis.
+
+```{r}
+any_control_filtered <- c(control_filtered, autocontrol_filtered, monitoring_filtered)
+wilcox.test(trust_filtered, any_control_filtered, paired = F, exact = F)
+```
+
+However, comparing control and autocontrol with filtered from 'bots' data comes close to rejecting the null hypothesis, with a p-value of `0.05466` .
+
+```{r}
+wilcox.test(control_filtered, autocontrol_filtered, paired = F, exact = F)
+```
+
+Let us move on to regression analysis.
+
+Firstly, we move the data about vignettes and control types from columns to rows:
+
+```{r}
+regression_df <- survey_df %>% pivot_longer(c(survey.1.player.item1control, survey.1.player.item1trust, survey.1.player.item1autocontrol, survey.1.player.item1monitoring, survey.1.player.item2control, survey.1.player.item2trust, survey.1.player.item2autocontrol, survey.1.player.item2monitoring, survey.1.player.item3control, survey.1.player.item3trust, survey.1.player.item3autocontrol, survey.1.player.item3monitoring, survey.1.player.item4control, survey.1.player.item4trust, survey.1.player.item4autocontrol, survey.1.player.item4monitoring, survey.1.player.item5control, survey.1.player.item5trust, survey.1.player.item5autocontrol, survey.1.player.item5monitoring, survey.2.player.item1control, survey.2.player.item1trust, survey.2.player.item1autocontrol, survey.2.player.item1monitoring, survey.2.player.item2control, survey.2.player.item2trust, survey.2.player.item2autocontrol, survey.2.player.item2monitoring, survey.2.player.item3control, survey.2.player.item3trust, survey.2.player.item3autocontrol, survey.2.player.item3monitoring, survey.2.player.item4control, survey.2.player.item4trust, survey.2.player.item4autocontrol, survey.2.player.item4monitoring, survey.2.player.item5control, survey.2.player.item5trust, survey.2.player.item5autocontrol, survey.2.player.item5monitoring, survey.3.player.item1control, survey.3.player.item1trust, survey.3.player.item1autocontrol, survey.3.player.item1monitoring, survey.3.player.item2control, survey.3.player.item2trust, survey.3.player.item2autocontrol, survey.3.player.item2monitoring, survey.3.player.item3control, survey.3.player.item3trust, survey.3.player.item3autocontrol, survey.3.player.item3monitoring, survey.3.player.item4control, survey.3.player.item4trust, survey.3.player.item4autocontrol, survey.3.player.item4monitoring, survey.3.player.item5control, survey.3.player.item5trust, survey.3.player.item5autocontrol, survey.3.player.item5monitoring, survey.4.player.item1control, survey.4.player.item1trust, survey.4.player.item1autocontrol, survey.4.player.item1monitoring, survey.4.player.item2control, survey.4.player.item2trust, survey.4.player.item2autocontrol, survey.4.player.item2monitoring, survey.4.player.item3control, survey.4.player.item3trust, survey.4.player.item3autocontrol, survey.4.player.item3monitoring, survey.4.player.item4control, survey.4.player.item4trust, survey.4.player.item4autocontrol, survey.4.player.item4monitoring, survey.4.player.item5control, survey.4.player.item5trust, survey.4.player.item5autocontrol, survey.4.player.item5monitoring, survey.5.player.item1control, survey.5.player.item1trust, survey.5.player.item1autocontrol, survey.5.player.item1monitoring, survey.5.player.item2control, survey.5.player.item2trust, survey.5.player.item2autocontrol, survey.5.player.item2monitoring, survey.5.player.item3control, survey.5.player.item3trust, survey.5.player.item3autocontrol, survey.5.player.item3monitoring, survey.5.player.item4control, survey.5.player.item4trust, survey.5.player.item4autocontrol, survey.5.player.item4monitoring, survey.5.player.item5control, survey.5.player.item5trust, survey.5.player.item5autocontrol, survey.5.player.item5monitoring), names_to = "vignette", values_to = "motivation") %>% drop_na(motivation)
+```
+
+And parse them to retrieve those to separate columns.
+
+```{r}
+regression_df <- regression_df %>% tidyr::extract(col = vignette,
+                                                  into = c("vignette", "control_type"),
+                                                  regex = "survey\\.\\d\\.player\\.item([[:digit:]])([[:alnum:]]+)")
+```
+
+Create dummy variables for categorical variables to be included in the model.
+
+In order to avoid the dummy trap, include only k-1 dummies per variable.
+
+```{r}
+regression_df <- regression_df %>% filter(demographics.1.player.gender != "")
+
+control_type_dummies <- model.matrix(~ control_type - 1, data=regression_df)
+control_type_dummies <- control_type_dummies[,1:(ncol(control_type_dummies)-1)]
+
+vignette_dummies <- model.matrix(~ vignette - 1, data=regression_df)
+vignette_dummies <- vignette_dummies[,1:(ncol(vignette_dummies)-1)]
+
+gender_dummies <- model.matrix(~ demographics.1.player.gender - 1, data=regression_df)
+gender_dummies <- gender_dummies[,1:(ncol(gender_dummies)-1)]
+
+age_dummies <- model.matrix(~ demographics.1.player.age - 1, data=regression_df)
+age_dummies <- age_dummies[,1:(ncol(age_dummies)-1)]
+
+highest_education_dummies <- model.matrix(~ demographics.1.player.highest_education - 1, data=regression_df)
+highest_education_dummies <- highest_education_dummies[,1:(ncol(highest_education_dummies)-1)]
+
+regression_df$workexperience <- as.numeric(regression_df$demographics.1.player.workexperience)
+```
+
+Fitting:
+
+```{r}
+regression_model <- lm(motivation ~ gender_dummies + age_dummies + highest_education_dummies + workexperience + vignette_dummies * control_type_dummies, data=regression_df)
+```
+
+Let us look at the assumptions of linear regression.
+
+```{r}
+# Check for linearity
+plot(regression_model)
+```
+
+Does indeed seems linear.
+
+```{r}
+# Check for independence
+dwtest(regression_model)
+```
+
+p-value is greater than 0.05, yet let us, however, continue.
+
+```{r}
+# Check for homoscedasticity
+ncvTest(regression_model)
+```
+
+This assumption is closer, yet fails, too.
+
+```{r}
+# Check for normality
+shapiro.test(residuals(regression_model))
+```
+
+Normality check passes.
+
+```{r}
+# Check for multicollinearity
+vif(regression_model, type='predictor')
+```
+
+The GVIF values are lower than 5, emeaning that this check passes.
+
+Even though not all of the assumptions hold, let us still have a look at the significance per variables in the model.
+
+```{r}
+summary(regression_model)
+```
+
+Among significant: the work experience (negative), and the combination of vignette 3 and automated control (positive); among those being close to significance -- automated control (negative), bachelor's degree (negative), high school or lower (negative).
+
+Multiple R-squared: 0.1035, meaning that roughly 10% of the variation in motivation can be explained by the independent variables included in this model.
+
+## Experiment 1 - students' responses
+
+Load experiment 1 data
+
+```{r}
+trust_students_df <- read.csv("data/trust_students.csv")
+```
+
+### Describe data
+
+```{r}
+ExpData(trust_students_df, type = 1)
+```
+
+```{r}
+ExpData(trust_students_df, type = 2)
+
+ExpNumStat(trust_students_df, gp = "trust.1.group.minimum_amount", Outlier = TRUE, round = 2)
+```
+
+### Clean data
+
+Remove all redundant rows with empty data
+
+```{r}
+trust_students_df <- trust_students_df %>% filter(trust.1.group.chosen_effort != "")
+```
+
+### Explore data
+
+Plotting the categorical variables in the dataset
+
+```{r}
+ExpCatViz(trust_students_df)
+```
+
+Some insight that can be drawn:
+
+-   male predominance in gender data.
+
+-   virtually all students from Austria.
+
+-   majority is of age 18-24.
+
+-   absolute majority has a bachelor's degree.
+
+-   about 60% chose to trust.
+
+-   a lot of people with both a little and a lot of work experience.
+
+-   only one treatment in data (C20).
+
+### Prepare data
+
+Again, data duplicates info about effort provision.
+
+```{r}
+head(trust_students_df)
+```
+
+```{r}
+trust_students_c20 <- trust_students_df %>%
+  filter(participant.id_in_session %% 2 == 0)
+```
+
+### Analysis
+
+In this section we will be aiming to conduct several tests to understand if hidden costs of control are present in the results of the this experiment. The significance level $\alpha$ here and further on is chosen to be 5%.
+
+Again, we will test if there is difference in effort provision in cases of controlling and not controlling, with the null hypothesis being that the groups are the same. This will be done by modifying chosen effort in no control scenario to always be above minimum amount (setting all those that are lower to a minimum amount).
+
+```{r}
+trust_students_c20 <- trust_students_c20 %>%
+  mutate(trust.1.group.chosen_effort_modified = ifelse(trust.1.group.chosen_effort < 20, 20, trust.1.group.chosen_effort))
+
+wilcox.test(trust_students_c20$trust.1.group.chosen_effort_min20, trust_students_c20$trust.1.group.chosen_effort_modified, paired = T, exact = F)
+```
+
+As we can see, the p-value `0.01463` , well below the chosen significance level of `0.5` , meaning that these groups do indeed differ.
+
+Let's look at the means of groups.
+
+```{r}
+mean(trust_students_c20$trust.1.group.chosen_effort_min20)
+mean(trust_students_c20$trust.1.group.chosen_effort_modified)
+```
+
+As expected, mean effort provision for not control is higher.
+
+Now, let us conduct the second test for this treatment. We will be testing if the hidden costs of control outweigh the benefits. That is, if effort provision is greater for no control situations even if no adjustment with setting values lesser than minimum amount to minimum amount is implemented.
+
+```{r}
+wilcox.test(trust_students_c20$trust.1.group.chosen_effort_min20, trust_students_c20$trust.1.group.chosen_effort, paired = T, exact = F)
+```
+
+This test yields no significant results, which is in line with Falk & Kosfeld's findings -- the economic incentives start outweighing the hidden costs of control after a certain threshold of minimal amount that can be set by the principal.
+
+The means and medians of these groups:
+
+```{r}
+mean(trust_students_c20$trust.1.group.chosen_effort_min20)
+mean(trust_students_c20$trust.1.group.chosen_effort)
+median(trust_students_c20$trust.1.group.chosen_effort_min20)
+median(trust_students_c20$trust.1.group.chosen_effort)
+```
+
+Interestingly, the value for the medians in case principal controls and trusts is equal to those reported by Falk & Kosfeld -- 20 and 30, respectively.
+
+The last analysis of the results of this experiment aim to assess the heterogeneity of the agents of all treatments. All agents were presented with a choice to enter the effort level for both cases - no control and with control, meaning that they could either react negatively to control (effort with control is less than without), neutrally (the effort value is the same) or positively (effort with control is greater than without).
+
+```{r}
+sum(trust_students_c20$trust.1.group.chosen_effort > trust_students_c20$trust.1.group.chosen_effort_min20, na.rm=TRUE)/nrow(trust_students_c20)
+sum(trust_students_c20$trust.1.group.chosen_effort == trust_students_c20$trust.1.group.chosen_effort_min20, na.rm=TRUE)/nrow(trust_students_c20)
+sum(trust_students_c20$trust.1.group.chosen_effort < trust_students_c20$trust.1.group.chosen_effort_min20, na.rm=TRUE)/nrow(trust_students_c20)
+```
+
+As depicted, the group of agent reacting negatively to control is the majority (50%). It is they, who are responsible for the existence of hidden costs of control, and because of them, on average, it does not pay off for the principle to control their agent. To compare, Falk & Kosfeld's experiment finds that 42% of agents react negatively, 21% react neutrally and 37% react positively.
+
+### 

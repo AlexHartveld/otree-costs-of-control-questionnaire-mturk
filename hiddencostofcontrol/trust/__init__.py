@@ -14,12 +14,8 @@ class C(BaseConstants):
     ENDOWMENT_PRINCIPAL = cu(0) #Principals endowment
 
 class Subsession(BaseSubsession):
-    pass
-
-def creating_session(subsession):
     control = [5, 10, 20]
-    for player in subsession.get_players():
-        player.control = control[player.group.id % 3]
+    pass    
 
 class Group(BaseGroup):
     minimum_amount = models.StringField(
@@ -59,6 +55,14 @@ def set_payoffs(group: Group):
 # PAGES
 class StartWaitPage(WaitPage):
     group_by_arrival_time = True
+
+def group_by_arrival_time_method(subsession, waiting_players):
+    if len(waiting_players) >= 2:
+        for player in waiting_players:
+            player.control = subsession.control[0]
+        subsession.control.append(subsession.control[0])
+        subsession.control.pop(0)
+        return [waiting_players[0], waiting_players[1]]
 
 class Send(Page):
     """This page is only for Principal. Can either trust the agent or not."""
